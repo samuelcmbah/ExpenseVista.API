@@ -11,6 +11,8 @@ namespace ExpenseVista.API.Data
         {
         }
 
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+
         public new DbSet<User> Users { get; set; }
     }
 }
