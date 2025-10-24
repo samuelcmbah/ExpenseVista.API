@@ -1,15 +1,19 @@
+using ExpenseVista.API.Configurations;
 using ExpenseVista.API.Data;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<ExpenseCategoryService>();
+
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -47,8 +51,8 @@ builder.Services.AddAuthentication();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add AutoMapper (we’ll configure later)
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// Add AutoMapper 
+builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
