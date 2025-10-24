@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ExpenseVista.API.DTOs.Category;
 using ExpenseVista.API.DTOs.ExpenseCategory;
 using ExpenseVista.API.Models;
 
@@ -16,6 +17,7 @@ namespace ExpenseVista.API.Configurations
         {
             CreateMap<Category, CategoryDTO>().ReverseMap();
             CreateMap<CreateCategoryDTO, Category>().ReverseMap();
+            CreateMap<UpdateCategoryDTO, Category>().ReverseMap();
         }
     }
 }
