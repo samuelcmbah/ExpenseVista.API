@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExpenseVista.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251023195035_AddExpenseCategory")]
-    partial class AddExpenseCategory
+    [Migration("20251024120437_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace ExpenseVista.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ExpenseVista.API.Models.ExpenseCategory", b =>
+            modelBuilder.Entity("ExpenseVista.API.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -33,16 +33,17 @@ namespace ExpenseVista.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("CategoryType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ExpenseCategories");
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("ExpenseVista.API.Models.User", b =>

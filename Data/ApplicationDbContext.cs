@@ -12,7 +12,7 @@ namespace ExpenseVista.API.Data
         }
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-        public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+        public DbSet<Category> Categories { get; set; }
 
         public new DbSet<User> Users { get; set; }
     }

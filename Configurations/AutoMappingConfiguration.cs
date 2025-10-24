@@ -14,9 +14,8 @@ namespace ExpenseVista.API.Configurations
 
         public void MapExpenseCategory()
         {
-            CreateMap<ExpenseCategory, ExpenseCategoryDTO>().ReverseMap();
-            CreateMap<ExpenseCategoryCreateDTO, ExpenseCategory>().ReverseMap();
-            CreateMap<ExpenseCategoryUpdateDTO, ExpenseCategory>().ReverseMap();
+            CreateMap<Category, CategoryDTO>().ReverseMap();
+            CreateMap<CreateCategoryDTO, Category>().ReverseMap();
         }
     }
 }
