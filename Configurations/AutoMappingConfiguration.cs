@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ExpenseVista.API.DTOs.Category;
-using ExpenseVista.API.DTOs.ExpenseCategory;
+using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Models;
 
 namespace ExpenseVista.API.Configurations
@@ -9,15 +9,33 @@ namespace ExpenseVista.API.Configurations
     {
         public AutoMappingConfiguration()
         {
-            MapExpenseCategory();
-            
+            MapCategory();
+            MapTransaction();
         }
 
-        public void MapExpenseCategory()
+        public void MapCategory()
         {
             CreateMap<Category, CategoryDTO>().ReverseMap();
             CreateMap<CreateCategoryDTO, Category>().ReverseMap();
             CreateMap<UpdateCategoryDTO, Category>().ReverseMap();
+        }
+
+        public void MapTransaction()
+        {
+            // READ: Map Category navigation property to the Category DTO
+            CreateMap<Transaction, TransactionDTO>()
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category)); 
+
+            // CREATE: Map CategoryId from DTO to the model's FK
+            CreateMap<TransactionCreateDTO, Transaction>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore());
+
+            // UPDATE: Map CategoryId from DTO to the model's FK
+            CreateMap<TransactionUpdateDTO, Transaction>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore());
         }
     }
 }

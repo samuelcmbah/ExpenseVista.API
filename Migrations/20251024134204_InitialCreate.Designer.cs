@@ -49,7 +49,7 @@ namespace ExpenseVista.API.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("ExpenseVista.API.Models.Transaction", b =>
@@ -336,7 +336,7 @@ namespace ExpenseVista.API.Migrations
             modelBuilder.Entity("ExpenseVista.API.Models.Category", b =>
                 {
                     b.HasOne("ExpenseVista.API.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany("Categories")
+                        .WithMany("Transactions")
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -421,7 +421,7 @@ namespace ExpenseVista.API.Migrations
 
             modelBuilder.Entity("ExpenseVista.API.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("Categories");
+                    b.Navigation("Transactions");
 
                     b.Navigation("Transactions");
                 });

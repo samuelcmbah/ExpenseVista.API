@@ -175,7 +175,7 @@ namespace ExpenseVista.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categories",
+                name: "Transactions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -219,7 +219,7 @@ namespace ExpenseVista.API.Migrations
                     table.ForeignKey(
                         name: "FK_Transactions_Categories_CategoryId",
                         column: x => x.CategoryId,
-                        principalTable: "Categories",
+                        principalTable: "Transactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -265,7 +265,7 @@ namespace ExpenseVista.API.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_ApplicationUserId",
-                table: "Categories",
+                table: "Transactions",
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
@@ -307,7 +307,7 @@ namespace ExpenseVista.API.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

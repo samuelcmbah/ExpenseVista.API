@@ -1,5 +1,5 @@
 ﻿
-namespace ExpenseVista.API.DTOs.ExpenseCategory
+namespace ExpenseVista.API.DTOs.Category
 {
     public class CategoryDTO
     {

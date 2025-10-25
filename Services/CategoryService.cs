@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Category;
-using ExpenseVista.API.DTOs.ExpenseCategory;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.EntityFrameworkCore;

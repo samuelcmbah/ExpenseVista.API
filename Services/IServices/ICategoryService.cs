@@ -1,5 +1,4 @@
 ﻿using ExpenseVista.API.DTOs.Category;
-using ExpenseVista.API.DTOs.ExpenseCategory;
 
 namespace ExpenseVista.API.Services.IServices
 {

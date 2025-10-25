@@ -1,0 +1,125 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ExpenseVista.API.DTOs.Transaction;
+using ExpenseVista.API.Services.IServices;
+using System.Security.Claims;
+using Microsoft.IdentityModel.JsonWebTokens;
+
+namespace ExpenseVista.API.Controllers
+{
+    [ApiController]
+    [Route("api/transactions")]
+    [Authorize]
+    public class TransactionsController : ControllerBase
+    {
+        private readonly ITransactionService transactionService;
+
+        public TransactionsController(ITransactionService transactionService)
+        {
+            this.transactionService = transactionService;
+        }
+
+        /// <summary>
+        /// Helper method to safely extract the authenticated User ID from the JWT claims.
+        /// </summary>
+        private string GetUserId()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                // This should not happen on an [Authorize] endpoint, but serves as a safety check.
+                throw new UnauthorizedAccessException("User ID claim not found in token.");
+            }
+            return userId;
+        }
+
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions()
+        {
+            var userId = GetUserId();
+            var transactions = await transactionService.GetAllAsync(userId);
+            return Ok(transactions);
+        }
+
+
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TransactionDTO>> GetTransactionById(int id)
+        {
+            var userId = GetUserId();
+            try
+            {
+                var transaction = await transactionService.GetByIdAsync(id, userId);
+                return Ok(transaction);
+            }
+            catch (KeyNotFoundException)
+            {
+                // KeyNotFoundException is thrown by the service if the transaction is not found or doesn't belong to the user
+                return NotFound($"Transaction with ID {id} not found or unauthorized.");
+            }
+        }
+
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<TransactionDTO>> CreateTransaction([FromBody] TransactionCreateDTO transactionCreateDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var newTransaction = await transactionService.CreateAsync(transactionCreateDTO, userId);
+
+            // Returns 201 Created with the location of the new resource
+            return CreatedAtAction(nameof(GetTransactionById), new { id = newTransaction.Id }, newTransaction);
+        }
+
+     
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateTransaction(int id, [FromBody] TransactionUpdateDTO transactionUpdateDTO)
+        {
+            if (id != transactionUpdateDTO.Id || !ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var userId = GetUserId();
+            try
+            {
+                await transactionService.UpdateAsync(id, transactionUpdateDTO, userId);
+                return NoContent(); // Successful update returns 204 No Content
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Transaction with ID {id} not found or unauthorized.");
+            }
+        }
+
+       
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteTransaction(int id)
+        {
+            var userId = GetUserId();
+            try
+            {
+                await transactionService.DeleteAsync(id, userId);
+                return NoContent(); // Successful deletion returns 204 No Content
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound($"Transaction with ID {id} not found or unauthorized.");
+            }
+        }
+    }
+}
