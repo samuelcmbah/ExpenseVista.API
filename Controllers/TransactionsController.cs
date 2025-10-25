@@ -10,7 +10,7 @@ namespace ExpenseVista.API.Controllers
     [ApiController]
     [Route("api/transactions")]
     [Authorize]
-    public class TransactionsController : ControllerBase
+    public class TransactionsController : BaseController
     {
         private readonly ITransactionService transactionService;
 
@@ -19,20 +19,7 @@ namespace ExpenseVista.API.Controllers
             this.transactionService = transactionService;
         }
 
-        /// <summary>
-        /// Helper method to safely extract the authenticated User ID from the JWT claims.
-        /// </summary>
-        private string GetUserId()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                // This should not happen on an [Authorize] endpoint, but serves as a safety check.
-                throw new UnauthorizedAccessException("User ID claim not found in token.");
-            }
-            return userId;
-        }
+       
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]

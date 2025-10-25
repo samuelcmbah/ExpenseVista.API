@@ -60,6 +60,11 @@ namespace ExpenseVista.API.Services
 
         public async Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId)
         {
+            var category = await context.Categories
+                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId && c.ApplicationUserId == userId);
+            if (category == null)
+                throw new InvalidOperationException("Invalid category or unauthorized access.");
+
             var transaction = mapper.Map<Transaction>(transactionCreateDTO)!;
             transaction.ApplicationUserId = userId;
 
@@ -91,5 +96,28 @@ namespace ExpenseVista.API.Services
             await context.SaveChangesAsync();
             // Note: No return value needed for a successful void delete
         }
+
+        /// <summary>
+        /// If you find that many services only need the Id, Amount, and Type of a transaction (e.g., for reporting sums)
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns>returns a list of transactions with minimal properties</returns>
+        public async Task<IEnumerable<TransactionLiteDTO>> GetAllLiteAsync(string userId)
+        {
+            var liteTransactions = await context.Transactions
+                .Where(t => t.ApplicationUserId == userId)
+                .AsNoTracking()
+                .Select(t => new TransactionLiteDTO
+                {
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    Type = t.Type,
+                    TransactionDate = t.TransactionDate
+                })
+                .ToListAsync();
+
+            return liteTransactions;
+        }
+
     }
 }

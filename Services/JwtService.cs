@@ -32,7 +32,7 @@ namespace ExpenseVista.API.Services
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(double.Parse(jwtSettings["DurationInHours"]!)),
+                expires: DateTime.UtcNow.AddDays(double.Parse(jwtSettings["DurationInDays"]!)),
                 signingCredentials: credentials
             );
 

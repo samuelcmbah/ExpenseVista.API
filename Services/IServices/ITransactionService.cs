@@ -10,5 +10,6 @@ namespace ExpenseVista.API.Services.IServices
         Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId);
         Task UpdateAsync(int id, TransactionUpdateDTO transactionUpdateDTO, string userId);
         Task DeleteAsync(int id, string userId);
+        Task<IEnumerable<TransactionLiteDTO>> GetAllLiteAsync(string userId);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ExpenseVista.API.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace ExpenseVista.API.Data
 {
@@ -14,6 +15,7 @@ namespace ExpenseVista.API.Data
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Budget> Budgets { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -43,6 +45,12 @@ namespace ExpenseVista.API.Data
                 .WithMany(u => u.Transactions)
                 .HasForeignKey(t => t.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //prevents race condition problem for concurrent requests
+            builder.Entity<Budget>()
+                .HasIndex(b => new { b.ApplicationUserId, b.BudgetMonth })
+                .IsUnique();
+
         }
     }
 }

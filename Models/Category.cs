@@ -1,15 +1,20 @@
-﻿namespace ExpenseVista.API.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ExpenseVista.API.Models
 {
     public class Category
     {
-        public int Id { get; set; } // if to use a different type for id
-        public string CategoryName { get; set; } = string.Empty;
-        public string CategoryType { get; set; } = string.Empty;
+        public int Id { get; set; }
 
-        // Relationships
+        [Required]
+        public string CategoryName { get; set; } = string.Empty;
+
+        // Relationships,  Foreign key and navigation
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-        // Foreign key and navigation
+
+        [Required]
         public required string ApplicationUserId { get; set; }
-        public  required ApplicationUser ApplicationUser { get; set; } 
+        [Required]
+        public required ApplicationUser ApplicationUser { get; set; }
     }
 }
