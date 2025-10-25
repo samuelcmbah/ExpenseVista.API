@@ -3,87 +3,115 @@ using ExpenseVista.API.DTOs.Category;
 using ExpenseVista.API.DTOs.ExpenseCategory;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
+using ExpenseVista.API.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace ExpenseVista.API.Controllers
 {
-    [Route("api/category")]
+    [Route("api/categories")]
     [ApiController]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
-        private readonly CategoryService categoryService;
-        private readonly IMapper mapper;
+        private readonly ICategoryService categoryService;
 
-        public CategoriesController(CategoryService categoryService, IMapper mapper)
+        public CategoriesController(ICategoryService categoryService)
         {
             this.categoryService = categoryService;
-            this.mapper = mapper;
         }
 
+        // Helper to get the authenticated user's ID
+        private string GetUserId()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("User ID claim not found in token.");
+
+            return userId;
+        }
+
+
+        // GET: api/categories
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
         {
-            var categories = await categoryService.GetAllAsync();
-            return Ok(mapper.Map<IEnumerable<CategoryDTO>>(categories));
+            var userId = GetUserId();
+            var categories = await categoryService.GetAllAsync(userId);
+
+            return Ok(categories);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<CategoryDTO>> GetById(int id)
+        // GET: api/categories/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CategoryDTO>> GetCategory(int id)
         {
-            var category = await categoryService.GetByIdAsync(id);
-            if (category == null)
+            var userId = GetUserId();
+
+            try
+            {
+                var category = await categoryService.GetByIdAsync(id, userId);
+                
+                return Ok(category);
+            }
+            catch (KeyNotFoundException)
+            {
+                // Handles the exception thrown by the service if the category isn't found or doesn't belong to the user
+                return NotFound();
+            }
+        }
+
+        // POST: api/categories
+        [HttpPost]
+        public async Task<ActionResult<CategoryDTO>> PostCategory([FromBody] CreateCategoryDTO createCategoryDTO)
+        {
+            var userId = GetUserId();
+            var newCategory = await categoryService.CreateAsync(createCategoryDTO, userId);
+
+            // Returns HTTP 201 Created with a link to the new resource
+            return CreatedAtAction(nameof(GetCategory), new { id = newCategory.Id }, newCategory);
+        }
+
+        // PUT: api/categories/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCategory(int id, UpdateCategoryDTO updateCategryDTO)
+        {
+            var userId = GetUserId();
+
+            try
+            {
+                if(id != updateCategryDTO.Id || updateCategryDTO == null)
+                {
+                    return BadRequest();
+                }
+                await categoryService.UpdateAsync(id, updateCategryDTO, userId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            var categoryDTO = mapper.Map<CategoryDTO>(category);
-            return Ok(categoryDTO);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody]CreateCategoryDTO createCategoryDTO)
+        // DELETE: api/categories/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCategory(int id)
         {
-            if(createCategoryDTO == null)
-            {
-                return BadRequest();
-            }
-            var category = mapper.Map<Category>(createCategoryDTO);
-            if (category == null)
-            {
-                return BadRequest();
-            }
-            var created = await categoryService.CreateAsync(category);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
+            var userId = GetUserId();
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, UpdateCategoryDTO updateCategoryDTO)
-        {
-            if (id != updateCategoryDTO.Id || updateCategoryDTO == null)
+            try
             {
-                return BadRequest();
+                await categoryService.DeleteAsync(id, userId);
+                return NoContent();
             }
-            var category = await categoryService.GetByIdAsync(id);
-            if (category == null)
+            catch (KeyNotFoundException)
             {
-                return BadRequest();
+                return NotFound();
             }
-           
-            await categoryService.UpdateAsync(mapper.Map(updateCategoryDTO, category)!);
-            return NoContent();
-        }
-
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var category = await categoryService.GetByIdAsync(id);
-            if(category == null)
-            {
-                return BadRequest();
-            }
-            await categoryService.DeleteAsync(id);
-            return NoContent();
         }
     }
 }

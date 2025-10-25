@@ -23,9 +23,8 @@ namespace ExpenseVista.API.Services
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email!),
             };
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -33,7 +32,7 @@ namespace ExpenseVista.API.Services
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["DurationInMinutes"]!)),
+                expires: DateTime.UtcNow.AddHours(double.Parse(jwtSettings["DurationInHours"]!)),
                 signingCredentials: credentials
             );
 
