@@ -59,8 +59,16 @@ namespace ExpenseVista.API.Controllers
                 return Unauthorized(new { message = "Invalid credentials." });
             }
 
+            var applicationUser = new ApplicationUserDTO
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email!,
+            };
+
             var token = jwtService.GenerateToken(user);
-            return Ok(new { token });
+            return Ok(new { token, applicationUser });
         }
     }
 }
