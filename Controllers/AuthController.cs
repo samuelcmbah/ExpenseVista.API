@@ -32,10 +32,13 @@ namespace ExpenseVista.API.Controllers
             {
                 return BadRequest(new { message = "Passwords do not match." });
             }
-
-           
-
-            var user = new ApplicationUser { UserName = registerDTO.Email, Email = registerDTO.Email };
+        
+            var user = new ApplicationUser { //maybe try auto mapping later
+                UserName = registerDTO.Email, 
+                Email = registerDTO.Email,
+                FirstName = registerDTO.FirstName,
+                LastName = registerDTO.LastName
+            };
             var result = await userManager.CreateAsync(user, registerDTO.Password);
 
             if (!result.Succeeded)
