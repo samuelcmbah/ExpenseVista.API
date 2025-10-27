@@ -66,11 +66,16 @@ namespace ExpenseVista.API.Services
             //        t.Type == TransactionType.Expense)
             //    .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
+            var totalIncome = transactions.Where(t => t.TransactionDate >= startDate && t.TransactionDate <= endDate)
+                                          .Where(t => t.Type == Models.Enums.TransactionType.Income)
+                                          .Sum(t => t.Amount);
+
 
             var budgetDto = mapper.Map<BudgetDTO>(budget)!;
 
             // Calculate status fields
             budgetDto.CurrentUsage = totalExpenses;
+            budgetDto.TotalIncome = totalIncome;
             budgetDto.RemainingAmount = budget.MonthlyLimit - totalExpenses;
             budgetDto.PercentageUsed = (budget.MonthlyLimit > 0)
                 ? Math.Round((totalExpenses / budget.MonthlyLimit) * 100, 2)
