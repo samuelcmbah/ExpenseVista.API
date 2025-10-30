@@ -76,7 +76,7 @@ namespace ExpenseVista.API.Services
             // Calculate status fields
             budgetDto.CurrentUsage = totalExpenses;
             budgetDto.TotalIncome = totalIncome;
-            budgetDto.RemainingAmount = budget.MonthlyLimit - totalExpenses;
+            budgetDto.RemainingAmount = totalIncome - totalExpenses;
             budgetDto.PercentageUsed = (budget.MonthlyLimit > 0)
                 ? Math.Round((totalExpenses / budget.MonthlyLimit) * 100, 2)
                 : 0;

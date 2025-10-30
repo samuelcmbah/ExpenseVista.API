@@ -42,9 +42,10 @@ namespace ExpenseVista.API.Services
 
         public async Task<IEnumerable<TransactionDTO>> GetAllAsync(string userId) 
         {
-            var transactions = await context.Transactions 
+            var transactions = await context.Transactions
                 .Where(t => t.ApplicationUserId == userId)
                 .Include(t => t.Category)//eager loading
+                .OrderByDescending(t => t.TransactionDate) // sort by date descending
                 .AsNoTracking() // Performance improvement for read-only query
                 .ToListAsync();
 
