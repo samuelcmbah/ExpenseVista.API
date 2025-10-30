@@ -81,9 +81,20 @@ namespace ExpenseVista.API.Services
         {
             var category = await GetCategoryEntityForUserAsync(id, userId);
 
+            // Check for linked transactions using the new helper method
+            if (await HasLinkedTransactionsAsync(id, userId))
+            {
+                throw new InvalidOperationException("Cannot delete category because it has linked transactions.");
+            }
+
             context.Categories.Remove(category);
             await context.SaveChangesAsync();
-            // Note: No return value needed for a successful void delete
+        }
+
+        private async Task<bool> HasLinkedTransactionsAsync(int categoryId, string userId)
+        {
+            return await context.Transactions.
+                AnyAsync(t => t.CategoryId == categoryId && t.ApplicationUserId == userId);
         }
     }
 }

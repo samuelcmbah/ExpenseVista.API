@@ -85,9 +85,9 @@ namespace ExpenseVista.API.Controllers
                 await transactionService.UpdateAsync(id, transactionUpdateDTO, userId);
                 return NoContent(); // Successful update returns 204 No Content
             }
-            catch (KeyNotFoundException)
+            catch (Exception ex)
             {
-                return NotFound($"Transaction with ID {id} not found or unauthorized.");
+                return NotFound($"Transaction with ID {id} not found or unauthorized. message: {ex.Message}");
             }
         }
 

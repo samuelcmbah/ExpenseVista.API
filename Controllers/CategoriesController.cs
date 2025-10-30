@@ -109,7 +109,12 @@ namespace ExpenseVista.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound();
+                return NotFound(); 
+            }
+            catch (InvalidOperationException ex) 
+            {
+                // Explicitly returns a 400 Bad Request with the reason.
+                return BadRequest(ex.Message);
             }
         }
     }
