@@ -24,7 +24,7 @@ namespace ExpenseVista.API.Controllers
         [HttpGet("status")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<BudgetDTO>> GetBudgetStatus([FromQuery] DateTime month)
+        public async Task<ActionResult<BudgetStatusDTO>> GetBudgetStatus([FromQuery] DateTime month)
         {
             var userId = GetUserId();
             try

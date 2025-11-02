@@ -33,7 +33,7 @@ namespace ExpenseVista.API.Services
             return budget;
         }
 
-        public async Task<BudgetDTO> GetBudgetStatusForMonthAsync(DateTime month, string userId)
+        public async Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(DateTime month, string userId)
         {
             //identify month and get budget for month
             var targetMonthStart = new DateTime(month.Year, month.Month, 1);
@@ -71,17 +71,17 @@ namespace ExpenseVista.API.Services
                                           .Sum(t => t.Amount);
 
 
-            var budgetDto = mapper.Map<BudgetDTO>(budget)!;
+            var budgetStatusDto = mapper.Map<BudgetStatusDTO>(budget)!;
 
             // Calculate status fields
-            budgetDto.CurrentUsage = totalExpenses;
-            budgetDto.TotalIncome = totalIncome;
-            budgetDto.RemainingAmount = totalIncome - totalExpenses;
-            budgetDto.PercentageUsed = (budget.MonthlyLimit > 0)
+            budgetStatusDto.CurrentUsage = totalExpenses;
+            budgetStatusDto.TotalIncome = totalIncome;
+            budgetStatusDto.RemainingAmount = budgetStatusDto.MonthlyLimit - budgetStatusDto.CurrentUsage;
+            budgetStatusDto.PercentageUsed = (budget.MonthlyLimit > 0)
                 ? Math.Round((totalExpenses / budget.MonthlyLimit) * 100, 2)
                 : 0;
 
-            return budgetDto;
+            return budgetStatusDto;
         }
 
         public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)
