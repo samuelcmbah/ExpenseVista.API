@@ -7,6 +7,7 @@ using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
 using ExpenseVista.API.Utilities;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,27 +46,64 @@ namespace ExpenseVista.API.Services
 
         // --- PUBLIC SERVICE METHODS ---
 
-        public async Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, PaginationDTO paginationDTO)
+        public async Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, TransactionFilterDTO filterDTO)
         {
             var queryable = context.Transactions
-                .Where(t => t.ApplicationUserId == userId);
+                 .Include(t => t.Category)//eager loading
+                 .Where(t => t.ApplicationUserId == userId)
+                 .AsQueryable();
 
-            var totalCount = await context.Transactions.CountAsync(t => t.ApplicationUserId == userId);
+            // Description or Category search
+            if (!string.IsNullOrWhiteSpace(filterDTO.SearchTerm))
+            {
+                var term = filterDTO.SearchTerm.ToLower();
+                queryable = queryable.Where(t =>
+                    t.Description!.ToLower().Contains(term) ||
+                    t.Category.CategoryName.ToLower().Contains(term));
+            }
 
+            // Category filter
+            if (!string.IsNullOrWhiteSpace(filterDTO.Category))
+            {
+                queryable = queryable.Where(t => t.Category.CategoryName == filterDTO.Category);
+            }
+
+            // Transaction type filter
+            if (filterDTO.Type.HasValue)
+            {
+                queryable = queryable.Where(t => ((int)t.Type) == filterDTO.Type.Value);
+            }
+
+            // Date range filter
+            if (filterDTO.StartDate.HasValue)
+            {
+                queryable = queryable.Where(t => t.TransactionDate >= filterDTO.StartDate.Value);
+            }
+
+            if (filterDTO.EndDate.HasValue)
+            {
+                queryable = queryable.Where(t => t.TransactionDate <= filterDTO.EndDate.Value);
+            }
+
+            //Total count (before pagination)
+            var totalCount = await queryable.CountAsync();
+
+            //Apply pagination
             var transactionList = await queryable
-                .Include(t => t.Category)//eager loading
-                .OrderByDescending(t => t.TransactionDate) // show recent transactions first
-                .Paginate(paginationDTO)
-                .AsNoTracking() // Performance improvement for read-only query
+                .OrderByDescending(t => t.TransactionDate)// show recent transactions first
+                .Paginate(filterDTO)
                 .ProjectTo<TransactionDTO>(mapper.ConfigurationProvider)
+                .AsNoTracking()// Performance improvement for read-only query
                 .ToListAsync();
 
             return new PagedResponse<TransactionDTO>(
                 transactionList,
-                paginationDTO.Page,
-                paginationDTO.RecordsPerPage,
+                filterDTO.Page,
+                filterDTO.RecordsPerPage,
                 totalCount
-                );
+            );
+
+            
         }
 
         public async Task<TransactionDTO> GetByIdAsync(int id, string userId)

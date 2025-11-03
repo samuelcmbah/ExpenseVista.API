@@ -23,10 +23,10 @@ namespace ExpenseVista.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions([FromQuery] PaginationDTO paginationDTO)
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions([FromQuery] TransactionFilterDTO filterDTO)
         {
             var userId = GetUserId();
-            var transactions = await transactionService.GetAllAsync(userId, paginationDTO);
+            var transactions = await transactionService.GetAllAsync(userId, filterDTO);
             return Ok(transactions);
         }
 
