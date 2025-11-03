@@ -32,9 +32,11 @@ namespace ExpenseVista.API.Controllers
                 var status = await budgetService.GetBudgetStatusForMonthAsync(month, userId);
                 return Ok(status);
             }
-            catch(KeyNotFoundException ex)
+            catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return NotFound(ex.Message);
+                
             }
 
         }

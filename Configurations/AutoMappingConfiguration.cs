@@ -44,6 +44,8 @@ namespace ExpenseVista.API.Configurations
         public void MapBudget()
         {
             CreateMap<Budget, BudgetDTO>()
+                .ReverseMap(); 
+            CreateMap<Budget, BudgetStatusDTO>()
                 .ReverseMap();
 
             CreateMap<BudgetCreateDTO, Budget>()

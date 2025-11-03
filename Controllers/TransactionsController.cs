@@ -9,7 +9,6 @@ namespace ExpenseVista.API.Controllers
 {
     [ApiController]
     [Route("api/transactions")]
-    [Authorize]
     public class TransactionsController : BaseController
     {
         private readonly ITransactionService transactionService;
