@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using ExpenseVista.API.DTOs.Pagination;
 using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Services.IServices;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
+using System.Security.Claims;
 
 namespace ExpenseVista.API.Controllers
 {
@@ -22,10 +23,10 @@ namespace ExpenseVista.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions()
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions([FromQuery] PaginationDTO paginationDTO)
         {
             var userId = GetUserId();
-            var transactions = await transactionService.GetAllAsync(userId);
+            var transactions = await transactionService.GetAllAsync(userId, paginationDTO);
             return Ok(transactions);
         }
 

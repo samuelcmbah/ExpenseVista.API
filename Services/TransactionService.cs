@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using ExpenseVista.API.Data;
+using ExpenseVista.API.DTOs.Pagination;
 using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
+using ExpenseVista.API.Utilities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +17,13 @@ namespace ExpenseVista.API.Services
     {
         private readonly ApplicationDbContext context;
         private readonly IMapper mapper;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public TransactionService(ApplicationDbContext context, IMapper mapper)
+        public TransactionService(ApplicationDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.context = context;
             this.mapper = mapper;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -40,16 +45,27 @@ namespace ExpenseVista.API.Services
 
         // --- PUBLIC SERVICE METHODS ---
 
-        public async Task<IEnumerable<TransactionDTO>> GetAllAsync(string userId) 
+        public async Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, PaginationDTO paginationDTO)
         {
-            var transactions = await context.Transactions
-                .Where(t => t.ApplicationUserId == userId)
+            var queryable = context.Transactions
+                .Where(t => t.ApplicationUserId == userId);
+
+            var totalCount = await context.Transactions.CountAsync(t => t.ApplicationUserId == userId);
+
+            var transactionList = await queryable
                 .Include(t => t.Category)//eager loading
-                .OrderByDescending(t => t.TransactionDate) // sort by date descending
+                .OrderByDescending(t => t.TransactionDate) // show recent transactions first
+                .Paginate(paginationDTO)
                 .AsNoTracking() // Performance improvement for read-only query
+                .ProjectTo<TransactionDTO>(mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            return mapper.Map<IEnumerable<TransactionDTO>>(transactions)!;
+            return new PagedResponse<TransactionDTO>(
+                transactionList,
+                paginationDTO.Page,
+                paginationDTO.RecordsPerPage,
+                totalCount
+                );
         }
 
         public async Task<TransactionDTO> GetByIdAsync(int id, string userId)

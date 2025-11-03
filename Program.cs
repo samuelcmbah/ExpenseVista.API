@@ -22,6 +22,7 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<JwtService>();
 
+builder.Services.AddHttpContextAccessor();//Http context used in classes. By default, only controllers and middleware have access to HttpContext
 // Add CORS with a default policy that allows predefined origin for api consumption
 var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")!.Split(";");
 builder.Services.AddCors(options =>
