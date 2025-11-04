@@ -2,7 +2,7 @@
 
 namespace ExpenseVista.API.DTOs.Transaction
 {
-    public class TransactionFilterDTO : PaginationDTO
+    public class FilterPagedTransactionDTO : PaginationDTO
     {
         public string? SearchTerm { get; set; }  // For description/category keyword
         public string? Category { get; set; }    // Category name

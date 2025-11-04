@@ -46,7 +46,7 @@ namespace ExpenseVista.API.Services
 
         // --- PUBLIC SERVICE METHODS ---
 
-        public async Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, TransactionFilterDTO filterDTO)
+        public async Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, FilterPagedTransactionDTO filterDTO)
         {
             var queryable = context.Transactions
                  .Include(t => t.Category)//eager loading

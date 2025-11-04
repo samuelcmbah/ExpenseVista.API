@@ -21,9 +21,9 @@ namespace ExpenseVista.API.Controllers
 
        
 
-        [HttpGet]
+        [HttpGet("filter")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions([FromQuery] TransactionFilterDTO filterDTO)
+        public async Task<ActionResult<PagedResponse<TransactionDTO>>> GetAllTransactions([FromQuery] FilterPagedTransactionDTO filterDTO)
         {
             var userId = GetUserId();
             var transactions = await transactionService.GetAllAsync(userId, filterDTO);

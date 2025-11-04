@@ -6,7 +6,7 @@ namespace ExpenseVista.API.Services.IServices
 {
     public interface ITransactionService
     {
-        Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, TransactionFilterDTO filterDTO);
+        Task<PagedResponse<TransactionDTO>> GetAllAsync(string userId, FilterPagedTransactionDTO filterDTO);
         Task<TransactionDTO> GetByIdAsync(int id, string userId);
         Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId);
         Task UpdateAsync(int id, TransactionUpdateDTO transactionUpdateDTO, string userId);
