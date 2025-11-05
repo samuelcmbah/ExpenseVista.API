@@ -24,7 +24,7 @@ namespace ExpenseVista.API.Controllers
         [HttpGet("filter")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResponse<TransactionDTO>>> GetAllTransactions([FromQuery] FilterPagedTransactionDTO filterDTO)
-        {
+       {
             var userId = GetUserId();
             var transactions = await transactionService.GetAllAsync(userId, filterDTO);
             return Ok(transactions);

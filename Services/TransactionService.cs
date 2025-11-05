@@ -63,9 +63,9 @@ namespace ExpenseVista.API.Services
             }
 
             // Category filter
-            if (!string.IsNullOrWhiteSpace(filterDTO.Category))
+            if (!string.IsNullOrWhiteSpace(filterDTO.CategoryName))
             {
-                queryable = queryable.Where(t => t.Category.CategoryName == filterDTO.Category);
+                queryable = queryable.Where(t => t.Category.CategoryName == filterDTO.CategoryName);
             }
 
             // Transaction type filter
