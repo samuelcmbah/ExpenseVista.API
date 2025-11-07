@@ -115,6 +115,7 @@ namespace ExpenseVista.API.Services
 
         public async Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId)
         {
+            //checking of to tie the trans to a cat and user
             var category = await context.Categories
                 .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId && c.ApplicationUserId == userId);
             if (category == null)

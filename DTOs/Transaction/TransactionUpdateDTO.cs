@@ -1,5 +1,6 @@
 ﻿using ExpenseVista.API.DTOs.Category;
 using ExpenseVista.API.Models.Enums;
+using ExpenseVista.API.Utilities;
 using System.ComponentModel.DataAnnotations;
 
 namespace ExpenseVista.API.DTOs.Transaction
@@ -19,6 +20,7 @@ namespace ExpenseVista.API.DTOs.Transaction
         public TransactionType Type { get; set; }
 
         [Required]
+        [NotInFuture]
         public DateTime TransactionDate { get; set; }
 
         // Foreign Key: Use the ID for input

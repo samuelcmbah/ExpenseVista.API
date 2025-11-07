@@ -3,6 +3,7 @@ using ExpenseVista.API.Data;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
+using ExpenseVista.API.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Add AutoMapper 
 builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new DecimalTwoPlacesConverter());
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

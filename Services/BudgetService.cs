@@ -55,28 +55,25 @@ namespace ExpenseVista.API.Services
             // Filter the local collection to the specific period and calculate total expenses
             var transactions = await transactionService.GetAllLiteAsync(userId);
             var totalExpenses = transactions
-                .Where(t => t.TransactionDate >= startDate && t.TransactionDate <= endDate)
-                .Where(t => t.Type == Models.Enums.TransactionType.Expense)
+                .Where(t => t.TransactionDate >= startDate && 
+                            t.TransactionDate <= endDate &&
+                            t.Type == Models.Enums.TransactionType.Expense)
                 .Sum(t => t.Amount);
-            //or use this
-            //var totalExpenses = await context.Transactions
-            //    .Where(t => t.ApplicationUserId == userId &&
-            //        t.TransactionDate >= startDate &&
-            //        t.TransactionDate <= endDate &&
-            //        t.Type == TransactionType.Expense)
-            //    .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            
 
-            var totalIncome = transactions.Where(t => t.TransactionDate >= startDate && t.TransactionDate <= endDate)
-                                          .Where(t => t.Type == Models.Enums.TransactionType.Income)
-                                          .Sum(t => t.Amount);
+            var totalIncome = transactions
+                .Where(t => t.TransactionDate >= startDate && 
+                            t.TransactionDate <= endDate &&
+                            t.Type == Models.Enums.TransactionType.Income)
+                .Sum(t => t.Amount);
 
 
             var budgetStatusDto = mapper.Map<BudgetStatusDTO>(budget)!;
 
             // Calculate status fields
-            budgetStatusDto.CurrentUsage = totalExpenses;
-            budgetStatusDto.TotalIncome = totalIncome;
-            budgetStatusDto.RemainingAmount = budgetStatusDto.MonthlyLimit - budgetStatusDto.CurrentUsage;
+            budgetStatusDto.CurrentUsage = Math.Round( totalExpenses, 2);
+            budgetStatusDto.TotalIncome = Math.Round(totalIncome, 2);
+            budgetStatusDto.RemainingAmount = Math.Round((budgetStatusDto.MonthlyLimit - budgetStatusDto.CurrentUsage), 2);
             budgetStatusDto.PercentageUsed = (budget.MonthlyLimit > 0)
                 ? Math.Round((totalExpenses / budget.MonthlyLimit) * 100, 2)
                 : 0;
