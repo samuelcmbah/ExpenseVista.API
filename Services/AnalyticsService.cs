@@ -1,5 +1,6 @@
 ﻿using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Analytics;
+using ExpenseVista.API.Models;
 using ExpenseVista.API.Models.Enums;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,90 @@ namespace ExpenseVista.API.Services
         {
             this.context = context;
         }
+
+
+        private async Task<BudgetProgressDTO> GetBudgetProgressAsync(string userId, DateTime startDate, decimal totalExpenses)
+        {
+            var budgets = await context.Budgets
+                .Where(b => b.ApplicationUserId == userId && b.BudgetMonth >= startDate)
+                .ToListAsync();
+
+            decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
+            decimal percentage = totalBudget > 0
+                ? Math.Round((totalExpenses / totalBudget) * 100, 2)
+                : 0;
+
+            return new BudgetProgressDTO
+            {
+                Spent = totalExpenses,
+                Total = totalBudget,
+                Percentage = percentage
+            };
+        }
+
+        private FinancialTransactionAnalytics GetTransactionAnalytics(List<Transaction> transactions)
+        {
+            decimal totalIncome = transactions
+                .Where(t => t.Type == TransactionType.Income)
+                .Sum(t => t.Amount);
+
+            decimal totalExpenses = transactions
+                .Where(t => t.Type == TransactionType.Expense)
+                .Sum(t => t.Amount);
+
+            var categorySpending = transactions
+                .Where(t => t.Type == TransactionType.Expense)
+                .GroupBy(t => t.Category.CategoryName)
+                .Select(g => new SpendingCategoryDTO
+                {
+                    Name = g.Key,
+                    Value = g.Sum(x => x.Amount),
+                    Percentage = totalExpenses > 0
+                        ? Math.Round((g.Sum(x => x.Amount) / totalExpenses) * 100, 2)
+                        : 0
+                })
+                .ToList();
+
+            var incomeVsExpenses = transactions
+                .GroupBy(t => t.TransactionDate.ToString("MMM yyyy"))
+                .Select(g => new IncomeExpenseDataDTO
+                {
+                    Month = g.Key,
+                    Income = g.Where(x => x.Type == TransactionType.Income).Sum(x => x.Amount),
+                    Expenses = g.Where(x => x.Type == TransactionType.Expense).Sum(x => x.Amount)
+                })
+                .OrderBy(x => DateTime.ParseExact(x.Month, "MMM yyyy", null))
+                .ToList();
+
+            var topCategory = categorySpending
+                .OrderByDescending(c => c.Value)
+                .FirstOrDefault();
+            var netBalance = totalIncome - totalExpenses;
+            var savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+
+            return new FinancialTransactionAnalytics
+            {
+                Summary = new SummaryDTO
+                {
+                    TotalIncome = totalIncome,
+                    TotalExpenses = totalExpenses,
+                    NetBalance = netBalance,
+                    SavingsRate = savingsRate
+                },
+                SpendingByCategory = categorySpending,
+                IncomeVsExpenses = incomeVsExpenses,
+                FinancialTrend = incomeVsExpenses,
+                KeyInsights = new KeyInsightsDTO
+                {
+                    TopSpendingCategory = topCategory?.Name ?? "N/A",
+                    TopSpendingAmount = topCategory?.Value ?? 0,
+                    TotalTransactions = transactions.Count,
+                    TotalIncomeTransactions = transactions.Count(t => t.Type == TransactionType.Income),
+                    TotalExpenseTransactions = transactions.Count(t => t.Type == TransactionType.Expense)
+                }
+            };
+        }
+
 
         public async Task<FinancialDataDTO> GetAnalyticsAsync(string period, string userId)
         {
@@ -33,13 +118,18 @@ namespace ExpenseVista.API.Services
                 .Where(t => t.ApplicationUserId == userId && t.TransactionDate >= startDate)
                 .ToListAsync();
 
+            decimal totalExpenses = transactions
+                .Where(t => t.Type == TransactionType.Expense)
+                .Sum(t => t.Amount);
+
+            var budgetProgress = await GetBudgetProgressAsync(userId, startDate, totalExpenses);
             if (!transactions.Any())
             {
                 return new FinancialDataDTO
                 {
                     TimePeriod = period,
                     Summary = new SummaryDTO(),
-                    BudgetProgress = new BudgetProgressDTO(),
+                    BudgetProgress = budgetProgress,
                     SpendingByCategory = new List<SpendingCategoryDTO>(),
                     IncomeVsExpenses = new List<IncomeExpenseDataDTO>(),
                     FinancialTrend = new List<IncomeExpenseDataDTO>(),
@@ -47,86 +137,17 @@ namespace ExpenseVista.API.Services
                 };
             }
 
-            //  Compute totals
-            decimal totalIncome = transactions
-                .Where(t => t.Type == TransactionType.Income)
-                .Sum(t => t.Amount);
-
-            decimal totalExpenses = transactions
-                .Where(t => t.Type == TransactionType.Expense)
-                .Sum(t => t.Amount);
-
-            // Budget Progress (for this month)
-            var budgets = await context.Budgets
-                .Where(b => b.ApplicationUserId == userId && b.BudgetMonth >= startDate)
-                .ToListAsync();
-               
-
-            decimal spent = totalExpenses;
-            decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
-            decimal percentage = totalBudget > 0
-                ? Math.Round((spent / totalBudget) * 100, 2)
-                : 0;
-
-            // Spending by Category (pie data)
-            var categorySpending = transactions
-                .Where(t => t.Type == TransactionType.Expense)
-                .GroupBy(t => t.Category.CategoryName)
-                .Select(g => new SpendingCategoryDTO
-                {
-                    Name = g.Key,
-                    Value = g.Sum(x => x.Amount),
-                    Percentage = spent > 0
-                        ? Math.Round((g.Sum(x => x.Amount) / spent) * 100, 2)
-                        : 0
-                })
-                .ToList();
-
-            // Income vs Expenses by Month
-            var incomeVsExpenses = transactions
-                .GroupBy(t => t.TransactionDate.ToString("MMM yyyy"))
-                .Select(g => new IncomeExpenseDataDTO
-                {
-                    Month = g.Key,
-                    Income = g.Where(x => x.Type == TransactionType.Income).Sum(x => x.Amount),
-                    Expenses = g.Where(x => x.Type == TransactionType.Expense).Sum(x => x.Amount)
-                })
-                .OrderBy(x => DateTime.ParseExact(x.Month, "MMM yyyy", null))
-                .ToList();
-
-            // Key Insights
-            var topCategory = categorySpending.OrderByDescending(c => c.Value).FirstOrDefault();
-
-            var netBalance = totalIncome - totalExpenses;
-            var savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+            var analytics = GetTransactionAnalytics(transactions);
 
             return new FinancialDataDTO
             {
                 TimePeriod = period,
-                Summary = new SummaryDTO
-                {
-                    TotalIncome = totalIncome,
-                    TotalExpenses = totalExpenses,
-                    NetBalance = netBalance,
-                    SavingsRate = savingsRate
-                },
-                BudgetProgress = new BudgetProgressDTO
-                {
-                    Spent = spent,
-                    Total = totalBudget,
-                    Percentage = percentage
-                },
-                SpendingByCategory = categorySpending,
-                IncomeVsExpenses = incomeVsExpenses,
-                FinancialTrend = incomeVsExpenses, // same for now
-                keyInsights = new KeyInsightsDTO
-                {
-                    TopSpendingCategory = topCategory?.Name ?? "N/A",
-                    TopSpendingAmount = topCategory?.Value ?? 0,
-                    TotalTransactions = transactions.Count,
-                    TotalIncomeTransactions = transactions.Count(t => t.Type == TransactionType.Income),
-                    TotalExpenseTransactions = transactions.Count(t => t.Type == TransactionType.Expense)
-                }
+                Summary = analytics.Summary,
+                BudgetProgress = budgetProgress,
+                SpendingByCategory = analytics.SpendingByCategory,
+                IncomeVsExpenses = analytics.IncomeVsExpenses,
+                FinancialTrend = analytics.FinancialTrend,
+                keyInsights = analytics.KeyInsights
             };
         }
     }
