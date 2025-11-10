@@ -38,6 +38,7 @@ namespace ExpenseVista.API.Services
                 return new FinancialDataDTO
                 {
                     TimePeriod = period,
+                    Summary = new SummaryDTO(),
                     BudgetProgress = new BudgetProgressDTO(),
                     SpendingByCategory = new List<SpendingCategoryDTO>(),
                     IncomeVsExpenses = new List<IncomeExpenseDataDTO>(),
@@ -46,7 +47,7 @@ namespace ExpenseVista.API.Services
                 };
             }
 
-            // 3 Compute totals
+            //  Compute totals
             decimal totalIncome = transactions
                 .Where(t => t.Type == TransactionType.Income)
                 .Sum(t => t.Amount);
@@ -56,13 +57,13 @@ namespace ExpenseVista.API.Services
                 .Sum(t => t.Amount);
 
             // Budget Progress (for this month)
-            var budget = await context.Budgets
-                .Where(b => b.ApplicationUserId == userId)
-                .OrderByDescending(b => b.BudgetMonth)
-                .FirstOrDefaultAsync();
+            var budgets = await context.Budgets
+                .Where(b => b.ApplicationUserId == userId && b.BudgetMonth >= startDate)
+                .ToListAsync();
+               
 
             decimal spent = totalExpenses;
-            decimal totalBudget = budget?.MonthlyLimit ?? 0;
+            decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
             decimal percentage = totalBudget > 0
                 ? Math.Round((spent / totalBudget) * 100, 2)
                 : 0;
@@ -96,9 +97,19 @@ namespace ExpenseVista.API.Services
             // Key Insights
             var topCategory = categorySpending.OrderByDescending(c => c.Value).FirstOrDefault();
 
+            var netBalance = totalIncome - totalExpenses;
+            var savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+
             return new FinancialDataDTO
             {
                 TimePeriod = period,
+                Summary = new SummaryDTO
+                {
+                    TotalIncome = totalIncome,
+                    TotalExpenses = totalExpenses,
+                    NetBalance = netBalance,
+                    SavingsRate = savingsRate
+                },
                 BudgetProgress = new BudgetProgressDTO
                 {
                     Spent = spent,

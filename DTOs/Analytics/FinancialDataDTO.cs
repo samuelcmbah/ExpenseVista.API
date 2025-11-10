@@ -3,6 +3,7 @@
     public class FinancialDataDTO
     {
         public string TimePeriod { get; set; } = string.Empty;
+        public SummaryDTO Summary { get; set; } = new();
         public BudgetProgressDTO BudgetProgress { get; set; } = new();
         public List<SpendingCategoryDTO> SpendingByCategory { get; set; } = new();
         public List<IncomeExpenseDataDTO> IncomeVsExpenses { get; set; } = new();
