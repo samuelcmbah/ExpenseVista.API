@@ -9,8 +9,25 @@ namespace ExpenseVista.API.Utilities
     {
         public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return reader.GetDecimal();
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                var stringValue = reader.GetString();
+                if (decimal.TryParse(stringValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+                {
+                    return result;
+                }
+
+                throw new JsonException($"Invalid decimal format: {stringValue}");
+            }
+
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return reader.GetDecimal();
+            }
+
+            throw new JsonException($"Unexpected token parsing decimal. Token: {reader.TokenType}");
         }
+
 
         public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
         {
