@@ -4,6 +4,7 @@ using ExpenseVista.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ExpenseVista.API.Controllers
 {
@@ -14,15 +15,18 @@ namespace ExpenseVista.API.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly JwtService jwtService;
+        private readonly ILookupNormalizer normalizer;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            JwtService jwtService)
+            JwtService jwtService,
+            ILookupNormalizer normalizer)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.jwtService = jwtService;
+            this.normalizer = normalizer;
         }
 
         [HttpPost("register")]
@@ -32,7 +36,19 @@ namespace ExpenseVista.API.Controllers
             {
                 return BadRequest(new { message = "Passwords do not match." });
             }
-        
+
+            // Normalize the email using the same logic Identity uses internally
+            var normalizedEmail = normalizer.NormalizeEmail(registerDTO.Email);
+
+            // Check for an existing user using the normalized email
+            var existingUser = await userManager.Users
+                .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
+
+            if (existingUser != null)
+            {
+                return BadRequest(new { message = "Email is already in use." });
+            }
+
             var user = new ApplicationUser { //maybe try auto mapping later
                 UserName = registerDTO.Email, 
                 Email = registerDTO.Email,
@@ -43,7 +59,8 @@ namespace ExpenseVista.API.Controllers
 
             if (!result.Succeeded)
             {
-                return BadRequest(result.Errors);
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(new {message = "Registration failed.", errors});
             }
 
             return Ok(new { message = "User registered successfully" });
@@ -59,6 +76,7 @@ namespace ExpenseVista.API.Controllers
             var result = await signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
             if (!result.Succeeded)
             {
+                
                 return Unauthorized(new { message = "Invalid credentials." });
             }
 
