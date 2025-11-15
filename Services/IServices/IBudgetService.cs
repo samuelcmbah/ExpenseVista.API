@@ -10,7 +10,7 @@ namespace ExpenseVista.API.Services.IServices
         Task DeleteAsync(int id, string userId);
 
         // Read/Calculation Operations
-        Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(DateTime month, string userId);
+        Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(string userId);
         Task<IEnumerable<BudgetDTO>> GetAllBudgetsAsync(string userId);
     }
 }

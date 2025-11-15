@@ -13,12 +13,14 @@ namespace ExpenseVista.API.Services
         private readonly ApplicationDbContext context;
         private readonly IMapper mapper;
         private readonly ITransactionService transactionService;
+        private readonly IPeriodicSummaryService periodicSummaryService;
 
-        public BudgetService(ApplicationDbContext context, IMapper mapper, ITransactionService transactionService)
+        public BudgetService(ApplicationDbContext context, IMapper mapper, ITransactionService transactionService, IPeriodicSummaryService periodicSummaryService)
         {
             this.context = context;
             this.mapper = mapper;
             this.transactionService = transactionService;
+            this.periodicSummaryService = periodicSummaryService;
         }
 
         private async Task<Budget> GetBudgetEntityForUserAsync(int budgetId, string userId)
@@ -33,52 +35,39 @@ namespace ExpenseVista.API.Services
             return budget;
         }
 
-        public async Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(DateTime month, string userId)
+        public async Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(string userId)
         {
-            //identify month and get budget for month
-            var targetMonthStart = new DateTime(month.Year, month.Month, 1);
-            var nextMonthStart = targetMonthStart.AddMonths(1);
-             
+           var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId);
+
+
             var budget = await context.Budgets
                 .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.ApplicationUserId == userId 
-                        && b.BudgetMonth >= targetMonthStart 
-                        && b.BudgetMonth < nextMonthStart);
+                        && b.BudgetMonth >= summary.Period 
+                        && b.BudgetMonth < summary.Period.AddMonths(1));
 
             if (budget == null)
             {
-                throw new KeyNotFoundException($"Budget not set for {targetMonthStart.ToString("MMMM yyyy")}.");
+                return new BudgetStatusDTO
+                {
+                    BudgetSet = false,
+                    MonthlyLimit = 0,
+                    TotalIncome = 0,
+                    CurrentUsage = 0,
+                    RemainingAmount = 0,
+                    PercentageUsed = 0
+                };
             }
-            var startDate = targetMonthStart;
-            var endDate = targetMonthStart.AddMonths(1).AddDays(-1);
 
-            // Filter the local collection to the specific period and calculate total expenses
-            var transactions = await transactionService.GetAllLiteAsync(userId);
-            var totalExpenses = transactions
-                .Where(t => t.TransactionDate >= startDate && 
-                            t.TransactionDate <= endDate &&
-                            t.Type == Models.Enums.TransactionType.Expense)
-                .Sum(t => t.Amount);
-            
-
-            var totalIncome = transactions
-                .Where(t => t.TransactionDate >= startDate && 
-                            t.TransactionDate <= endDate &&
-                            t.Type == Models.Enums.TransactionType.Income)
-                .Sum(t => t.Amount);
-
-
-            var budgetStatusDto = mapper.Map<BudgetStatusDTO>(budget)!;
-
-            // Calculate status fields
-            budgetStatusDto.CurrentUsage = Math.Round( totalExpenses, 2);
-            budgetStatusDto.TotalIncome = Math.Round(totalIncome, 2);
-            budgetStatusDto.RemainingAmount = Math.Round((budgetStatusDto.MonthlyLimit - budgetStatusDto.CurrentUsage), 2);
-            budgetStatusDto.PercentageUsed = (budget.MonthlyLimit > 0)
-                ? Math.Round((totalExpenses / budget.MonthlyLimit) * 100, 2)
-                : 0;
-
-            return budgetStatusDto;
+            return new BudgetStatusDTO
+            {
+                BudgetSet = true,
+                MonthlyLimit = budget.MonthlyLimit,
+                RemainingAmount = budget.MonthlyLimit - summary.TotalExpenses,
+                PercentageUsed = budget.MonthlyLimit > 0
+                    ? Math.Round((summary.TotalExpenses / budget.MonthlyLimit) * 100, 2)
+                    : 0
+            };
         }
 
         public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)

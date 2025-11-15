@@ -24,12 +24,12 @@ namespace ExpenseVista.API.Controllers
         [HttpGet("status")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<BudgetStatusDTO>> GetBudgetStatus([FromQuery] DateTime month)
+        public async Task<ActionResult<BudgetStatusDTO>> GetBudgetStatus()
         {
             var userId = GetUserId();
             try
             {
-                var status = await budgetService.GetBudgetStatusForMonthAsync(month, userId);
+                var status = await budgetService.GetBudgetStatusForMonthAsync(userId);
                 return Ok(status);
             }
             catch(Exception ex)

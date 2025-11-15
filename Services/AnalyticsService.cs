@@ -1,6 +1,6 @@
 ﻿using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Analytics;
-using ExpenseVista.API.Models;
+using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Models.Enums;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +10,12 @@ namespace ExpenseVista.API.Services
     public class AnalyticsService : IAnalyticsService
     {
         private readonly ApplicationDbContext context;
+        private readonly IPeriodicSummaryService periodicSummaryService;
 
-        public AnalyticsService(ApplicationDbContext context)
+        public AnalyticsService(ApplicationDbContext context, IPeriodicSummaryService periodicSummaryService)
         {
             this.context = context;
+            this.periodicSummaryService = periodicSummaryService;
         }
 
 
@@ -36,16 +38,9 @@ namespace ExpenseVista.API.Services
             };
         }
 
-        private FinancialTransactionAnalytics GetTransactionAnalytics(List<Transaction> transactions)
+        private FinancialTransactionAnalytics GetTransactionAnalytics(List<TransactionDTO> transactions, decimal totalIncome, decimal totalExpenses)
         {
-            decimal totalIncome = transactions
-                .Where(t => t.Type == TransactionType.Income)
-                .Sum(t => t.Amount);
-
-            decimal totalExpenses = transactions
-                .Where(t => t.Type == TransactionType.Expense)
-                .Sum(t => t.Amount);
-
+           
             var categorySpending = transactions
                 .Where(t => t.Type == TransactionType.Expense)
                 .GroupBy(t => t.Category.CategoryName)
@@ -102,34 +97,16 @@ namespace ExpenseVista.API.Services
 
         public async Task<FinancialDataDTO> GetAnalyticsAsync(string period, string userId)
         {
-            // Determine date range
-            DateTime startDate = period switch
-            {
-                "This Month" => new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
-                "Last 3 Months" => DateTime.Now.AddMonths(-3),
-                "Last 6 Months" => DateTime.Now.AddMonths(-6),
-                "This Year" => new DateTime(DateTime.Now.Year, 1, 1),
-                _ => DateTime.Now.AddMonths(-1)
-            };
+            var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId, period);
 
-            //  Get transactions for user in that period
-            var transactions = await context.Transactions
-                .Include(t => t.Category)
-                .Where(t => t.ApplicationUserId == userId && t.TransactionDate >= startDate)
-                .ToListAsync();
-
-            decimal totalExpenses = transactions
-                .Where(t => t.Type == TransactionType.Expense)
-                .Sum(t => t.Amount);
-
-            var budgetProgress = await GetBudgetProgressAsync(userId, startDate, totalExpenses);
-            if (!transactions.Any())
+            var budgetProgress = await GetBudgetProgressAsync(userId, summary.Period, summary.TotalExpenses);
+            if (summary.Transactions == null)
             {
                 return new FinancialDataDTO
                 {
                     TimePeriod = period,
                     Summary = new SummaryDTO(),
-                    BudgetProgress = budgetProgress,
+                    BudgetProgress = new BudgetProgressDTO(),
                     SpendingByCategory = new List<SpendingCategoryDTO>(),
                     IncomeVsExpenses = new List<IncomeExpenseDataDTO>(),
                     FinancialTrend = new List<IncomeExpenseDataDTO>(),
@@ -137,7 +114,7 @@ namespace ExpenseVista.API.Services
                 };
             }
 
-            var analytics = GetTransactionAnalytics(transactions);
+            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses);
 
             return new FinancialDataDTO
             {
