@@ -67,11 +67,18 @@ namespace ExpenseVista.API.Controllers
         [HttpPost]
         public async Task<ActionResult<CategoryDTO>> PostCategory([FromBody] CreateCategoryDTO createCategoryDTO)
         {
-            var userId = GetUserId();
-            var newCategory = await categoryService.CreateAsync(createCategoryDTO, userId);
+            try
+            {
+                var userId = GetUserId();
+                var newCategory = await categoryService.CreateAsync(createCategoryDTO, userId);
 
-            // Returns HTTP 201 Created with a link to the new resource
-            return CreatedAtAction(nameof(GetCategory), new { id = newCategory.Id }, newCategory);
+                // Returns HTTP 201 Created with a link to the new resource
+                return CreatedAtAction(nameof(GetCategory), new { id = newCategory.Id }, newCategory);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT: api/categories/5
