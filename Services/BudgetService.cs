@@ -39,18 +39,23 @@ namespace ExpenseVista.API.Services
         {
            var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId);
 
-
+            var periodStart = summary.Period;
+            var nextPeriodStart = periodStart.AddMonths(1);
+            // Try to fetch the budget for that month
             var budget = await context.Budgets
                 .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.ApplicationUserId == userId 
-                        && b.BudgetMonth >= summary.Period 
-                        && b.BudgetMonth < summary.Period.AddMonths(1));
+                .FirstOrDefaultAsync(b =>
+                    b.ApplicationUserId == userId &&
+                    b.BudgetMonth >= periodStart &&
+                    b.BudgetMonth < nextPeriodStart
+                );
 
             if (budget == null)
             {
                 return new BudgetStatusDTO
-                {
+                {   
                     BudgetSet = false,
+                    BudgetMonth = summary.Period,
                     MonthlyLimit = 0,
                     TotalIncome = 0,
                     CurrentUsage = 0,
@@ -61,9 +66,13 @@ namespace ExpenseVista.API.Services
 
             return new BudgetStatusDTO
             {
+                Id = budget.Id,
                 BudgetSet = true,
+                BudgetMonth = budget.BudgetMonth,
                 MonthlyLimit = budget.MonthlyLimit,
-                RemainingAmount = budget.MonthlyLimit - summary.TotalExpenses,
+                RemainingAmount = (budget.MonthlyLimit - summary.TotalExpenses) > 0
+                    ? (budget.MonthlyLimit - summary.TotalExpenses)
+                    : 0,
                 PercentageUsed = budget.MonthlyLimit > 0
                     ? Math.Round((summary.TotalExpenses / budget.MonthlyLimit) * 100, 2)
                     : 0

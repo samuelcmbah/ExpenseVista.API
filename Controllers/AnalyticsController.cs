@@ -24,7 +24,7 @@ namespace ExpenseVista.Api.Controllers
             {
 
             // Validate input
-            var validPeriods = new[] { "This Month", "Last 3 Months", "Last 6 Months", "This Year" };
+            var validPeriods = new[] { "This Month", "Last Month", "Last 3 Months", "Last 6 Months", "This Year" };
             if (!validPeriods.Contains(period))
                 return BadRequest("Invalid period parameter.");
             var userId = GetUserId();

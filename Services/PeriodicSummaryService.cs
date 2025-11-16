@@ -21,27 +21,53 @@ namespace ExpenseVista.API.Services
         }
         public async Task<PeriodicSummaryDTO> GetPeriodicSummaryAsync(string userId, string period = "This Month")
         {
-            // Determine date range
-            DateTime startDate = period switch
-            {
-                "This Month" => new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
-                "Last 3 Months" => DateTime.Now.AddMonths(-3),
-                "Last 6 Months" => DateTime.Now.AddMonths(-6),
-                "This Year" => new DateTime(DateTime.Now.Year, 1, 1),
-                _ => DateTime.Now.AddMonths(-1)
-            };
+            DateTime now = DateTime.Now;
 
-            //  Get transactions for user in that period
+            DateTime startDate;
+            DateTime endDate = now; // default end date is today unless period specifies otherwise
+
+            switch (period)
+            {
+                case "This Month":
+                    startDate = new DateTime(now.Year, now.Month, 1);
+                    break;
+
+                case "Last Month":
+                    startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-1); // 1st of last month
+                    endDate = new DateTime(now.Year, now.Month, 1);                 // 1st of this month
+                    break;
+
+                case "Last 3 Months":
+                    startDate = now.AddMonths(-3);
+                    break;
+
+                case "Last 6 Months":
+                    startDate = now.AddMonths(-6);
+                    break;
+
+                case "This Year":
+                    startDate = new DateTime(now.Year, 1, 1);
+                    break;
+
+                default:
+                    startDate = now.AddMonths(-1);
+                    break;
+            }
+
+            // Fetch range
             var transactions = await context.Transactions
                 .Include(t => t.Category)
-                .Where(t => t.ApplicationUserId == userId && t.TransactionDate >= startDate)
+                .Where(t =>
+                    t.ApplicationUserId == userId &&
+                    t.TransactionDate >= startDate &&
+                    t.TransactionDate < endDate)  // use < endDate for accurate month windows
                 .ToListAsync();
 
-            var income = transactions
+            decimal income = transactions
                 .Where(t => t.Type == TransactionType.Income)
                 .Sum(t => t.Amount);
 
-            var expenses = transactions
+            decimal expenses = transactions
                 .Where(t => t.Type == TransactionType.Expense)
                 .Sum(t => t.Amount);
 
@@ -53,5 +79,6 @@ namespace ExpenseVista.API.Services
                 TotalExpenses = expenses
             };
         }
+
     }
 }
