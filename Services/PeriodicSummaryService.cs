@@ -73,7 +73,8 @@ namespace ExpenseVista.API.Services
 
             return new PeriodicSummaryDTO
             {
-                Period = startDate,
+                StartDate = startDate,
+                EndDate = endDate,
                 Transactions = mapper.Map<List<TransactionDTO>>(transactions),
                 TotalIncome = income,
                 TotalExpenses = expenses

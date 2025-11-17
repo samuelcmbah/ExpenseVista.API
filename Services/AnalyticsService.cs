@@ -19,10 +19,13 @@ namespace ExpenseVista.API.Services
         }
 
 
-        private async Task<BudgetProgressDTO> GetBudgetProgressAsync(string userId, DateTime startDate, decimal totalExpenses)
+        private async Task<BudgetProgressDTO> GetBudgetProgressAsync(string userId, DateTime startDate, DateTime endDate, decimal totalExpenses)
         {
             var budgets = await context.Budgets
-                .Where(b => b.ApplicationUserId == userId && b.BudgetMonth >= startDate)
+                .Where(b => 
+                    b.ApplicationUserId == userId && 
+                    b.BudgetMonth >= startDate &&
+                    b.BudgetMonth < endDate)
                 .ToListAsync();
 
             decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
@@ -99,7 +102,7 @@ namespace ExpenseVista.API.Services
         {
             var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId, period);
 
-            var budgetProgress = await GetBudgetProgressAsync(userId, summary.Period, summary.TotalExpenses);
+            var budgetProgress = await GetBudgetProgressAsync(userId, summary.StartDate, summary.EndDate, summary.TotalExpenses);
             if (summary.Transactions == null)
             {
                 return new FinancialDataDTO
