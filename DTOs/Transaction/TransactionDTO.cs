@@ -12,6 +12,6 @@ namespace ExpenseVista.API.DTOs.Transaction
         public TransactionType Type { get; set; }
         public DateTime TransactionDate { get; set; }
         public CategoryDTO Category { get; set; } = new();
-
+        public bool IsAutomatic { get; set; } = false;
     }
 }

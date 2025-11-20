@@ -16,7 +16,8 @@ namespace ExpenseVista.API.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Budget> Budgets { get; set; }
-
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -38,12 +39,22 @@ namespace ExpenseVista.API.Data
                 .HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)
                 .HasForeignKey(t => t.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);//can't delete category tied to a transaction
 
             builder.Entity<Transaction>()
                 .HasOne(t => t.ApplicationUser)
                 .WithMany(u => u.Transactions)
                 .HasForeignKey(t => t.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);//delete transaction when user is deleted
+
+            builder.Entity<Wallet>()
+                .HasIndex(w => w.ApplicationUserId)
+                .IsUnique();
+
+            builder.Entity<WalletTransaction>()
+                .HasOne(t => t.Wallet)
+                .WithMany(w => w.Transactions)
+                .HasForeignKey(t => t.WalletId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             //prevents race condition problem for concurrent requests

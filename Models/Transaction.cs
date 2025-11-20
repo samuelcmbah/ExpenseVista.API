@@ -29,11 +29,13 @@ namespace ExpenseVista.API.Models
         // Foreign keys and navigation
         [Required]
         public int CategoryId { get; set; }
-        public required Category Category { get; set; }
+        public Category Category { get; set; } = new();
 
         [Required]
         public required string ApplicationUserId { get; set; }
-        public required ApplicationUser ApplicationUser { get; set; }
+        public ApplicationUser ApplicationUser { get; set; } = new();
+
+        public bool IsAutomatic { get; set; } = false;
 
     }
 }

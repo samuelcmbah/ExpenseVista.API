@@ -5,9 +5,12 @@ namespace ExpenseVista.API.Data
 {
     public class CategorySeeder
     {
-        public static async Task SeedDefaultCategories(ApplicationDbContext context)
+        public static async Task EnsurePopulatedAsync(IApplicationBuilder app)
         {
-            if (await context.Categories.AnyAsync(c => c.IsDefault)) return;
+            using var scope = app.ApplicationServices.CreateScope();
+            var services = scope.ServiceProvider;
+
+            var context = services.GetRequiredService<ApplicationDbContext>();
 
             var defaultCategories = new List<Category>
             {
@@ -15,10 +18,15 @@ namespace ExpenseVista.API.Data
                 new Category { CategoryName = "Shopping", IsDefault = true },
                 new Category { CategoryName = "Housing", IsDefault = true },
                 new Category { CategoryName = "Transportation", IsDefault = true },
+                new Category { CategoryName = "Computing & Internet", IsDefault = true },
                 new Category { CategoryName = "Entertainment", IsDefault = true },
                 new Category { CategoryName = "Health", IsDefault = true },
                 new Category { CategoryName = "Salary", IsDefault = true },
-                new Category { CategoryName = "Investment", IsDefault = true }
+                new Category { CategoryName = "Betting", IsDefault = true },
+                new Category { CategoryName = "Investment", IsDefault = true },
+                new Category { CategoryName = "Funding", IsDefault = true },
+                new Category { CategoryName = "Transfers", IsDefault = true },
+                new Category { CategoryName = "Reversal", IsDefault = true }
             };
             //checks if the category alrady exists before seeding
             foreach (var cat in defaultCategories)

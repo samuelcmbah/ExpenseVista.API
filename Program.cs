@@ -17,6 +17,10 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddHttpClient(); // used by PaystackService
+builder.Services.AddScoped<IPaystackService, PaystackService>();
+builder.Services.Configure<PaystackSettings>(builder.Configuration.GetSection("Paystack"));
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPeriodicSummaryService, PeriodicSummaryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
@@ -139,11 +143,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await CategorySeeder.SeedDefaultCategories(context);
-}
+
+    await CategorySeeder.EnsurePopulatedAsync(app);
+
 
 
 app.Run();

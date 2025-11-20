@@ -12,6 +12,7 @@ using System.Security.Claims;
 namespace ExpenseVista.API.Controllers
 {
     [Route("api/categories")]
+    [Authorize]
     [ApiController]
     public class CategoriesController : ControllerBase
     {

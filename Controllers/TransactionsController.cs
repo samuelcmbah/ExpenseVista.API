@@ -9,6 +9,7 @@ using System.Security.Claims;
 namespace ExpenseVista.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/transactions")]
     public class TransactionsController : BaseController
     {

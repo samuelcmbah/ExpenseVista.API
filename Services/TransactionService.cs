@@ -4,6 +4,7 @@ using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Pagination;
 using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Models;
+using ExpenseVista.API.Models.Enums;
 using ExpenseVista.API.Services.IServices;
 using ExpenseVista.API.Utilities;
 using Microsoft.EntityFrameworkCore;
@@ -115,9 +116,10 @@ namespace ExpenseVista.API.Services
 
         public async Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId)
         {
-            //checking of to tie the trans to a cat and user
+            //checking if to tie the trans to a cat and user
             var category = await context.Categories
-                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId && c.ApplicationUserId == userId);
+                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId &&
+                                            (c.ApplicationUserId == userId || string.IsNullOrEmpty(c.ApplicationUserId)));
             if (category == null)
                 throw new InvalidOperationException("Invalid category or unauthorized access.");
 
@@ -153,11 +155,8 @@ namespace ExpenseVista.API.Services
             // Note: No return value needed for a successful void delete
         }
 
-        /// <summary>
-        /// If you find that many services only need the Id, Amount, and Type of a transaction (e.g., for reporting sums)
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns>returns a list of transactions with minimal properties</returns>
+        
+        // If you find that many services only need the Id, Amount, and Type of a transaction (e.g., for reporting sums)
         public async Task<IEnumerable<TransactionLiteDTO>> GetAllLiteAsync(string userId)
         {
             var liteTransactions = await context.Transactions
@@ -173,6 +172,66 @@ namespace ExpenseVista.API.Services
                 .ToListAsync();
 
             return liteTransactions;
+        }
+
+        public async Task CreateFromWalletAsync(
+    string userId,
+    decimal amount,
+    string categoryName,
+    string type,
+    string description,
+    string source,
+    string reference)
+        {
+            // 1. Get wallet
+            var wallet = await context.Wallets
+                .FirstOrDefaultAsync(w => w.ApplicationUserId == userId);
+
+            if (wallet == null)
+                throw new InvalidOperationException("Wallet not found for user.");
+
+            // 2. Validate category
+            var category = await context.Categories
+                .FirstOrDefaultAsync(c => c.CategoryName == categoryName && c.IsDefault);
+
+            if (category == null)
+                throw new InvalidOperationException($"Required category '{categoryName}' not found.");
+
+            // 3. Create WalletTransaction record
+            var walletTx = new WalletTransaction
+            {
+                WalletId = wallet.Id,
+                Amount = amount,
+                Description = description,
+                Type = type == "Income" ? "Credit" : "Debit",
+                Source = source,
+                Reference = reference,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            context.WalletTransactions.Add(walletTx);
+
+            // 4. Update wallet balance
+            if (type == "Income")
+                wallet.Balance += amount;
+            else
+                wallet.Balance -= amount;
+
+            // Create normal Transaction (what your UI shows)
+            var transaction = new Transaction
+            {
+                ApplicationUserId = userId,
+                CategoryId = category.Id,
+                Amount = amount,
+                Description = description,
+                Type = type == "Income" ? TransactionType.Income : TransactionType.Expense,
+                TransactionDate = DateTime.UtcNow,
+                IsAutomatic = true
+            };
+
+            context.Transactions.Add(transaction);
+
+            await context.SaveChangesAsync();
         }
 
     }

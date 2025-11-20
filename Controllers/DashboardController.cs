@@ -1,12 +1,14 @@
 ﻿using ExpenseVista.API.DTOs.Analytics;
 using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseVista.API.Controllers
 {
     [Route("api/dashboard")]
+    [Authorize]
     [ApiController]
     public class DashboardController : BaseController
     {

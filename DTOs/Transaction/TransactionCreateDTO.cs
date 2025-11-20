@@ -28,5 +28,10 @@ namespace ExpenseVista.API.DTOs.Transaction
 
         // Optional properties
         public string? Description { get; set; }
+
+        public bool IsAutomatic { get; set; } = false;
+        public int WalletId { get; set; }
+
+
     }
 }
