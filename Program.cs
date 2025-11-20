@@ -139,11 +139,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await CategorySeeder.SeedDefaultCategories(context);
-}
+
+    await CategorySeeder.EnsurePopulatedAsync(app);
+
 
 
 app.Run();

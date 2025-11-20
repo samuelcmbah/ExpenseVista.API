@@ -117,7 +117,8 @@ namespace ExpenseVista.API.Services
         {
             //checking of to tie the trans to a cat and user
             var category = await context.Categories
-                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId && c.ApplicationUserId == userId);
+                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId &&
+                (c.ApplicationUserId == userId || string.IsNullOrEmpty(c.ApplicationUserId)));
             if (category == null)
                 throw new InvalidOperationException("Invalid category or unauthorized access.");
 
