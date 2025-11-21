@@ -17,6 +17,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -27,6 +29,10 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<JwtService>();
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddHttpContextAccessor();//Http context used in classes. By default, only controllers and middleware have access to HttpContext
 // Add CORS with a default policy that allows predefined origin for api consumption
 var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")!.Split(";");

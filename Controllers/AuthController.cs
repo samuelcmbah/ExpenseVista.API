@@ -1,10 +1,14 @@
 ﻿using ExpenseVista.API.DTOs.Auth;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
+using ExpenseVista.API.Services.IServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ExpenseVista.API.Controllers
 {
@@ -14,19 +18,20 @@ namespace ExpenseVista.API.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
-        private readonly JwtService jwtService;
-        private readonly ILookupNormalizer normalizer;
+        private readonly IAuthService authService;
+        private readonly ILogger<AuthController> logger;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            JwtService jwtService,
-            ILookupNormalizer normalizer)
+            IAuthService authService,
+            ILogger<AuthController> logger
+            )
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
-            this.jwtService = jwtService;
-            this.normalizer = normalizer;
+            this.authService = authService;
+            this.logger = logger;
         }
 
         [HttpPost("register")]
@@ -37,59 +42,71 @@ namespace ExpenseVista.API.Controllers
                 return BadRequest(new { message = "Passwords do not match." });
             }
 
-            // Normalize the email using the same logic Identity uses internally
-            var normalizedEmail = normalizer.NormalizeEmail(registerDTO.Email);
+            var (succeeded, errors) = await authService.RegisterAsync(registerDTO);
 
-            // Check for an existing user using the normalized email
-            var existingUser = await userManager.Users
-                .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
-
-            if (existingUser != null)
+            if (!succeeded)
             {
-                return BadRequest(new { message = "Email is already in use." });
-            }
-
-            var user = new ApplicationUser { //maybe try auto mapping later
-                UserName = registerDTO.Email, 
-                Email = registerDTO.Email,
-                FirstName = registerDTO.FirstName,
-                LastName = registerDTO.LastName
-            };
-            var result = await userManager.CreateAsync(user, registerDTO.Password);
-
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return BadRequest(new {message = "Registration failed.", errors});
+                // Keep the same format your frontend expects
+                return BadRequest(new { message = "Registration failed.", errors });
             }
 
             return Ok(new { message = "User registered successfully" });
         }
 
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDTO verifyEmailDTO)
+        {
+            try
+            {
+                var succeeded = await authService.ConfirmEmailAsync(verifyEmailDTO.Email, verifyEmailDTO.Token);
+                return Ok(new { mesage = "Email has been verified" });
+            }
+            catch (Exception ex) { 
+                logger.LogError(ex.Message);
+                return BadRequest(new { message = "verification failed.", ex.Message });
+            }
+        }
+
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendEmail([FromQuery] string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return BadRequest(new { message = "User not found." });
+
+            if (user.EmailConfirmed)
+                return BadRequest(new { message = "Email already verified." });
+
+            await authService.SendVerificationAsync(user);
+
+            return Ok(new { message = "Verification email resent." });
+        }
+
+
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
-            var user = await userManager.FindByEmailAsync(loginDTO.Email);
-            if (user == null)
-                return Unauthorized(new { message = "Invalid credentials." });
-
-            var result = await signInManager.CheckPasswordSignInAsync(user, loginDTO.Password, false);
-            if (!result.Succeeded)
+            try
             {
-                
-                return Unauthorized(new { message = "Invalid credentials." });
+                var (token, applicationUser) = await authService.LoginAsync(loginDTO);
+
+                // Success: Return 200 OK with the token and user data
+                return Ok(new { token, applicationUser });
             }
-
-            var applicationUser = new ApplicationUserDTO
+            catch (UnauthorizedAccessException ex)
             {
-                UserId = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email!,
-            };
-
-            var token = jwtService.GenerateToken(user);
-            return Ok(new { token, applicationUser });
+                // Failure: Return 401 Unauthorized with the message from the service
+                // The service throws this exception for both bad email/password and unverified email.
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected server errors
+                logger.LogError($"Unexpected login error {ex.Message}");
+                return StatusCode(500, new { message = "An unexpected error occurred during login." });
+            }
         }
     }
 }
