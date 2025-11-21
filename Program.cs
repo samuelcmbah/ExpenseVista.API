@@ -17,6 +17,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPeriodicSummaryService, PeriodicSummaryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();

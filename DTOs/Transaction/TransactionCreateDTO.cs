@@ -28,5 +28,8 @@ namespace ExpenseVista.API.DTOs.Transaction
 
         // Optional properties
         public string? Description { get; set; }
+
+        public string Currency { get; set; } = "NGN";
+
     }
 }

@@ -29,5 +29,7 @@ namespace ExpenseVista.API.DTOs.Transaction
 
         // Optional properties
         public string? Description { get; set; }
+
+        public required string Currency { get; set; } 
     }
 }

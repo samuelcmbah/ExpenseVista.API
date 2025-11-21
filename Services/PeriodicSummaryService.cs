@@ -65,11 +65,11 @@ namespace ExpenseVista.API.Services
 
             decimal income = transactions
                 .Where(t => t.Type == TransactionType.Income)
-                .Sum(t => t.Amount);
+                .Sum(t => t.ConvertedAmount);
 
             decimal expenses = transactions
                 .Where(t => t.Type == TransactionType.Expense)
-                .Sum(t => t.Amount);
+                .Sum(t => t.ConvertedAmount);
 
             return new PeriodicSummaryDTO
             {

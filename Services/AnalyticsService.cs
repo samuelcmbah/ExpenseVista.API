@@ -50,9 +50,9 @@ namespace ExpenseVista.API.Services
                 .Select(g => new SpendingCategoryDTO
                 {
                     Name = g.Key,
-                    Value = g.Sum(x => x.Amount),
+                    Value = g.Sum(x => x.ConvertedAmount),
                     Percentage = totalExpenses > 0
-                        ? Math.Round((g.Sum(x => x.Amount) / totalExpenses) * 100, 2)
+                        ? Math.Round((g.Sum(x => x.ConvertedAmount) / totalExpenses) * 100, 2)
                         : 0
                 })
                 .ToList();
@@ -62,8 +62,8 @@ namespace ExpenseVista.API.Services
                 .Select(g => new IncomeExpenseDataDTO
                 {
                     Month = g.Key,
-                    Income = g.Where(x => x.Type == TransactionType.Income).Sum(x => x.Amount),
-                    Expenses = g.Where(x => x.Type == TransactionType.Expense).Sum(x => x.Amount)
+                    Income = g.Where(x => x.Type == TransactionType.Income).Sum(x => x.ConvertedAmount),
+                    Expenses = g.Where(x => x.Type == TransactionType.Expense).Sum(x => x.ConvertedAmount)
                 })
                 .OrderBy(x => DateTime.ParseExact(x.Month, "MMM yyyy", null))
                 .ToList();

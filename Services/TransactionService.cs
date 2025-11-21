@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using ExpenseVista.API.Configurations;
 using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Pagination;
 using ExpenseVista.API.DTOs.Transaction;
@@ -7,10 +8,12 @@ using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
 using ExpenseVista.API.Utilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ExpenseVista.API.Services
 {
@@ -19,12 +22,19 @@ namespace ExpenseVista.API.Services
         private readonly ApplicationDbContext context;
         private readonly IMapper mapper;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IExchangeRateService exchangeRateService;
 
-        public TransactionService(ApplicationDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly string baseCurrrency;
+
+        public TransactionService(ApplicationDbContext context, IMapper mapper, 
+            IHttpContextAccessor httpContextAccessor, IExchangeRateService exchangeRateService,
+            IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
+            this.exchangeRateService = exchangeRateService;
+            baseCurrrency = appSettings.Value.BaseCurrency;
         }
 
         /// <summary>
@@ -117,13 +127,21 @@ namespace ExpenseVista.API.Services
         {
             //checking of to tie the trans to a cat and user
             var category = await context.Categories
-                .FirstOrDefaultAsync(c => c.Id == transactionCreateDTO.CategoryId &&
+                .FirstOrDefaultAsync(c => 
+                c.Id == transactionCreateDTO.CategoryId &&
                 (c.ApplicationUserId == userId || string.IsNullOrEmpty(c.ApplicationUserId)));
+
             if (category == null)
                 throw new InvalidOperationException("Invalid category or unauthorized access.");
+            //get exhnage rate
+            var rate = await exchangeRateService.GetRateAsync(transactionCreateDTO.Currency, baseCurrrency);
 
+            
+            
             var transaction = mapper.Map<Transaction>(transactionCreateDTO)!;
             transaction.ApplicationUserId = userId;
+            transaction.ExchangeRate = rate;
+            transaction.ConvertedAmount = transactionCreateDTO.Amount * rate;
 
             context.Transactions.Add(transaction);
             await context.SaveChangesAsync();
@@ -140,7 +158,25 @@ namespace ExpenseVista.API.Services
         {
             var transaction = await GetTransactionEntityForUserAsync(id, userId);
 
-            mapper.Map(transactionUpdateDTO, transaction);
+
+            bool currencyChanged = transaction.Currency != transactionUpdateDTO.Currency;
+            bool amountChanged = transaction.Amount != transactionUpdateDTO.Amount;
+
+            if (currencyChanged || amountChanged)
+            {
+                var rate = await exchangeRateService.GetRateAsync(transactionUpdateDTO.Currency, baseCurrrency);
+                transaction.Currency = transactionUpdateDTO.Currency;     // original currency
+                transaction.Amount = transactionUpdateDTO.Amount;         // original amount
+                transaction.ExchangeRate = rate;         // updated rate
+                transaction.ConvertedAmount = transactionUpdateDTO.Amount * rate; // recalc NGN
+            }
+
+            // Map remaining simple fields (no currency logic here)
+            transaction.Type = transactionUpdateDTO.Type;
+            transaction.TransactionDate = transactionUpdateDTO.TransactionDate;
+            transaction.CategoryId = transactionUpdateDTO.CategoryId;
+            transaction.Description = transactionUpdateDTO.Description;
+
             await context.SaveChangesAsync();
             // Note: No return value needed for a successful void update
         }
@@ -167,7 +203,7 @@ namespace ExpenseVista.API.Services
                 .Select(t => new TransactionLiteDTO
                 {
                     Id = t.Id,
-                    Amount = t.Amount,
+                    Amount = t.ConvertedAmount,
                     Type = t.Type,
                     TransactionDate = t.TransactionDate
                 })

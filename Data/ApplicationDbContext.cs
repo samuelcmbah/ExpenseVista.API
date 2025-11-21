@@ -24,7 +24,7 @@ namespace ExpenseVista.API.Data
 
 
             builder.Entity<Transaction>()
-                .Property(t => t.Amount)
+                .Property(t => t.ConvertedAmount)
                 .HasPrecision(18, 2);
 
             //EF Core can automatically handle these relationships via conventions, but it’s good practice to ensure clarity

@@ -34,12 +34,16 @@ namespace ExpenseVista.API.Configurations
             CreateMap<TransactionCreateDTO, Transaction>()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore());
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
+                .ForMember(dest => dest.ExchangeRate, opt => opt.Ignore())
+                .ForMember(dest => dest.ConvertedAmount, opt => opt.Ignore());
 
             // UPDATE: Map CategoryId from DTO to the model's FK
             CreateMap<TransactionUpdateDTO, Transaction>()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
-                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore());
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
+                .ForMember(dest => dest.ExchangeRate, opt => opt.Ignore())
+                .ForMember(dest => dest.ConvertedAmount, opt => opt.Ignore());
         }
         public void MapBudget()
         {

@@ -35,5 +35,12 @@ namespace ExpenseVista.API.Models
         public required string ApplicationUserId { get; set; }
         public required ApplicationUser ApplicationUser { get; set; }
 
+        //currency exchange
+        public string Currency { get; set; } = "NGN";
+        [Column(TypeName = "decimal(18, 6)")]
+        public decimal ExchangeRate { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal ConvertedAmount { get; set; }
+
     }
 }
