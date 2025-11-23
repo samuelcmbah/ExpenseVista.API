@@ -26,24 +26,39 @@ public class EmailService : IEmailService
 
         var bodyBuilder = new BodyBuilder
         {
-            HtmlBody = $"Click <a href='{verifyUrl}'>here</a> to verify your email."
-
+            HtmlBody = $@"
+            <p>Thank you for signing up on ExpenseVista.</p>
+            <p>Click the button below to verify your email addres.</p>
+            <div style='margin-top:20px;'>
+                <a href='{verifyUrl}' 
+                   style='display:inline-block;
+                          padding:10px 20px;
+                          font-size:16px;
+                          color:#fff;
+                          background-color:#28a745;
+                          text-decoration:none;
+                          border-radius:5px;'>
+                    Verify Email
+                </a>
+            </div>
+            <p>If you didn't sign up for ExpenseVista, please ignore this email.</p>"
         };
+
         message.Body = bodyBuilder.ToMessageBody();
 
         using var client = new SmtpClient();
         try
         {
-            logger.LogInformation($"Attempting to send email to {to}");
+            logger.LogWarning ($"Attempting to send email to {to}");
             await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
             await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password); 
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
-            logger.LogInformation($"Email successfully sent to {to}");
+            logger.LogWarning($"Email successfully sent to {to}");
         }
         catch (Exception ex)
         {
-            logger.LogError($"Error sending email to {to}: {ex.Message}");
+            logger.LogError($"Error sending confirmation email to {to}: {ex.Message}");
             //depending on requirement
             throw;
         }
@@ -55,4 +70,90 @@ public class EmailService : IEmailService
             }
         }
     }
+
+    public async Task SendPasswordResetEmailAsync(string to, string resetUrl)
+    {
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("ExpenseVista", _emailSettings.Username));
+        message.To.Add(MailboxAddress.Parse(to));
+        message.Subject = "Reset your ExpenseVista password";
+
+        var bodyBuilder = new BodyBuilder
+        {
+            HtmlBody = $@"
+            <p>You requested to reset your password.</p>
+            <p>If you didn’t request this, please ignore this email.</p>
+            <div style='margin-top:20px;'>
+                <a href='{resetUrl}' 
+                   style='display:inline-block;
+                          padding:10px 20px;
+                          font-size:16px;
+                          color:#fff;
+                          background-color:#28a745;
+                          text-decoration:none;
+                          border-radius:5px;'>
+                    Reset Password
+                </a>
+            </div>"
+        };
+
+
+        message.Body = bodyBuilder.ToMessageBody();
+
+        using var client = new SmtpClient();
+        try
+        {
+            await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+            await client.SendAsync(message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Error sending reset email to {to}: {ex.Message}");
+            //depending on requirement
+            throw;
+        }
+        finally
+        {
+            if (client.IsConnected)
+            {
+                await client.DisconnectAsync(true);
+            }
+        }
+
+    }
+
+    public async Task SendPasswordChangedNotification(string to)
+    {
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("ExpenseVista", _emailSettings.Username));
+        message.To.Add(MailboxAddress.Parse(to));
+        message.Subject = "Your ExpenseVista Password Was Changed";
+
+        var bodyBuilder = new BodyBuilder
+        {
+            HtmlBody = @"
+            <p>Hello,</p>
+            <p>This is a notification that your ExpenseVista account password was recently changed.</p>
+            <p>If you did not perform this action, please reset your password immediately or contact support.</p>
+            <p>Thank you,<br/>ExpenseVista Team</p>
+        "
+        };
+
+        message.Body = bodyBuilder.ToMessageBody();
+
+        using var client = new SmtpClient();
+        try
+        {
+            await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+            await client.SendAsync(message);
+        }
+        finally
+        {
+            await client.DisconnectAsync(true);
+        }
+    }
+
+
 }

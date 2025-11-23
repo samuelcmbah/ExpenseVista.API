@@ -139,8 +139,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// optional but recommended for clarity in minimal hosting
+//app.UseRouting();
 
 app.UseCors();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -148,7 +151,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-    await CategorySeeder.EnsurePopulatedAsync(app);
+await CategorySeeder.EnsurePopulatedAsync(app);
 
 
 

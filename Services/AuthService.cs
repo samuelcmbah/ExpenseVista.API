@@ -119,5 +119,39 @@ namespace ExpenseVista.API.Services
 
             return (token, applicationUserDTO);
         }
+
+        public async Task ForgotPasswordAsync(string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            // Always return success (to avoid account enumeration)
+            if (user == null)
+                return;
+
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            var resetUrl = $"{frontendUrl}/reset-password?token={encodedToken}&email={user.Email}";
+
+            await emailService.SendPasswordResetEmailAsync(user.Email!, resetUrl);
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordDTO dto)
+        {
+            var user = await userManager.FindByEmailAsync(dto.Email);
+            if (user == null) return false;
+
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Token));
+
+            var result = await userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
+
+            if(result.Succeeded)
+            {
+                await emailService.SendPasswordChangedNotification(user.Email!);
+                return true;
+            }
+            return false;
+        }
+
     }
 }

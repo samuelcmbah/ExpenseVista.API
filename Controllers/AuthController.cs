@@ -53,8 +53,8 @@ namespace ExpenseVista.API.Controllers
             return Ok(new { message = "User registered successfully" });
         }
 
-        [HttpPost("verify-email")]
-        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDTO verifyEmailDTO)
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] VerifyEmailDTO verifyEmailDTO)
         {
             try
             {
@@ -68,9 +68,9 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpPost("resend-verification")]
-        public async Task<IActionResult> ResendEmail([FromQuery] string email)
+        public async Task<IActionResult> ResendEmail([FromBody] EmailRequest request)
         {
-            var user = await userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByEmailAsync(request.Email);
 
             if (user == null)
                 return BadRequest(new { message = "User not found." });
@@ -108,5 +108,32 @@ namespace ExpenseVista.API.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred during login." });
             }
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO dto)
+        {
+            await authService.ForgotPasswordAsync(dto.Email);
+            return Ok(new { message = "If an account exists, a password reset link has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+        {
+            try
+            {
+             
+
+                var success = await authService.ResetPasswordAsync(dto);
+                return success ? Ok(new { message = "Password reset successful" })
+                               : BadRequest(new { message = "Invalid or expired token" });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Reset passsword error: {ex.Message}");
+                return StatusCode(500, new { message = "An unexpected error occured while resetting password" });
+
+            }
+        }
+
     }
 }

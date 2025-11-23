@@ -10,6 +10,9 @@ namespace ExpenseVista.API.Services.IServices
         Task SendVerificationAsync(ApplicationUser user);
         Task<bool> ConfirmEmailAsync(string email, string token);
         Task<(string Token, ApplicationUserDTO UserDTO)> LoginAsync(LoginDTO dto);
+
+        Task ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(ResetPasswordDTO dto);
     }
 
 }
