@@ -3,6 +3,7 @@ using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 
@@ -13,15 +14,19 @@ namespace ExpenseVista.API.Controllers
     public class TransactionsController : BaseController
     {
         private readonly ITransactionService transactionService;
+        private readonly IOutputCacheStore outputCacheStore;
+        private const string cacheTag = "Trans";
 
-        public TransactionsController(ITransactionService transactionService)
+        public TransactionsController(ITransactionService transactionService, IOutputCacheStore outputCacheStore)
         {
             this.transactionService = transactionService;
+            this.outputCacheStore = outputCacheStore;
         }
 
        
 
         [HttpGet("filter")]
+        [OutputCache(PolicyName = "ShortCache", Tags = [cacheTag])]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<PagedResponse<TransactionDTO>>> GetAllTransactions([FromQuery] FilterPagedTransactionDTO filterDTO)
        {
@@ -32,6 +37,7 @@ namespace ExpenseVista.API.Controllers
 
 
         [HttpGet("{id:int}")]
+        [OutputCache(PolicyName = "ShortCache", Tags = [cacheTag])]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TransactionDTO>> GetTransactionById(int id)
@@ -62,7 +68,7 @@ namespace ExpenseVista.API.Controllers
 
             var userId = GetUserId();
             var newTransaction = await transactionService.CreateAsync(transactionCreateDTO, userId);
-
+            await outputCacheStore.EvictByTagAsync(cacheTag, default);
             // Returns 201 Created with the location of the new resource
             return CreatedAtAction(nameof(GetTransactionById), new { id = newTransaction.Id }, newTransaction);
         }
@@ -83,6 +89,7 @@ namespace ExpenseVista.API.Controllers
             try
             {
                 await transactionService.UpdateAsync(id, transactionUpdateDTO, userId);
+                await outputCacheStore.EvictByTagAsync(cacheTag, default);
                 return NoContent(); // Successful update returns 204 No Content
             }
             catch (Exception ex)
@@ -101,6 +108,7 @@ namespace ExpenseVista.API.Controllers
             try
             {
                 await transactionService.DeleteAsync(id, userId);
+                await outputCacheStore.EvictByTagAsync(cacheTag, default);
                 return NoContent(); // Successful deletion returns 204 No Content
             }
             catch (KeyNotFoundException)

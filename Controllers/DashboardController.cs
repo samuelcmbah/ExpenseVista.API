@@ -18,6 +18,8 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<DashboardDTO>> GetDashboard([FromQuery] DateTime month)
         {
             var userId = GetUserId();

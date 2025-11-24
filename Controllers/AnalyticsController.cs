@@ -18,27 +18,29 @@ namespace ExpenseVista.Api.Controllers
             this.analyticsService = analyticsService;
         }
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<FinancialDataDTO>> GetAnalytics([FromQuery] string period)
         {
             try
             {
 
-            // Validate input
-            var validPeriods = new[] { "This Month", "Last Month", "Last 3 Months", "Last 6 Months", "This Year" };
-            if (!validPeriods.Contains(period))
-                return BadRequest("Invalid period parameter.");
-            var userId = GetUserId();
+                // Validate input
+                var validPeriods = new[] { "This Month", "Last Month", "Last 3 Months", "Last 6 Months", "This Year" };
+                if (!validPeriods.Contains(period))
+                    return BadRequest("Invalid period parameter.");
+                var userId = GetUserId();
 
-           var data = await analyticsService.GetAnalyticsAsync(period, userId);
+                var data = await analyticsService.GetAnalyticsAsync(period, userId);
 
-            return Ok(data);
+                return Ok(data);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
-       
+
     }
 }

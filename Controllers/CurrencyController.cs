@@ -15,6 +15,7 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpGet("supported")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSupportedCurrencies()
         {
             var currencies = await _exchangeService.GetSupportedCurrenciesAsync();
@@ -22,6 +23,7 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpGet("rate")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRate([FromQuery] string from, [FromQuery] string to)
         {
             var rate = await _exchangeService.GetRateAsync(from, to);

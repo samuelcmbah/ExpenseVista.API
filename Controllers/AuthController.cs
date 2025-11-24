@@ -2,6 +2,7 @@
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace ExpenseVista.API.Controllers
 {
     [Route("api/auth")]
     [ApiController]
+    [AllowAnonymous]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> userManager;
@@ -35,6 +37,8 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
             if (registerDTO.Password != registerDTO.ConfirmPassword)
@@ -53,7 +57,10 @@ namespace ExpenseVista.API.Controllers
             return Ok(new { message = "User registered successfully" });
         }
 
+
         [HttpPost("confirm-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ConfirmEmail([FromBody] VerifyEmailDTO verifyEmailDTO)
         {
             try
@@ -68,6 +75,8 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpPost("resend-verification")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ResendEmail([FromBody] EmailRequest request)
         {
             var user = await userManager.FindByEmailAsync(request.Email);
@@ -86,6 +95,8 @@ namespace ExpenseVista.API.Controllers
 
 
         [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
             try
@@ -111,6 +122,7 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO dto)
         {
             await authService.ForgotPasswordAsync(dto.Email);
@@ -118,6 +130,8 @@ namespace ExpenseVista.API.Controllers
         }
 
         [HttpPost("reset-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
         {
             try

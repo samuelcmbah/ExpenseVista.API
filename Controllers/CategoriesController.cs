@@ -13,7 +13,7 @@ namespace ExpenseVista.API.Controllers
 {
     [Route("api/categories")]
     [ApiController]
-    public class CategoriesController : ControllerBase
+    public class CategoriesController : BaseController
     {
         private readonly ICategoryService categoryService;
 
@@ -22,20 +22,10 @@ namespace ExpenseVista.API.Controllers
             this.categoryService = categoryService;
         }
 
-        // Helper to get the authenticated user's ID
-        private string GetUserId()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrEmpty(userId))
-                throw new UnauthorizedAccessException("User ID claim not found in token.");
-
-            return userId;
-        }
-
 
         // GET: api/categories
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
         {
             var userId = GetUserId();
@@ -46,6 +36,8 @@ namespace ExpenseVista.API.Controllers
 
         // GET: api/categories/5
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CategoryDTO>> GetCategory(int id)
         {
             var userId = GetUserId();
@@ -65,6 +57,8 @@ namespace ExpenseVista.API.Controllers
 
         // POST: api/categories
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<CategoryDTO>> PostCategory([FromBody] CreateCategoryDTO createCategoryDTO)
         {
             try
@@ -83,6 +77,9 @@ namespace ExpenseVista.API.Controllers
 
         // PUT: api/categories/5
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> PutCategory(int id, UpdateCategoryDTO updateCategryDTO)
         {
             var userId = GetUserId();
@@ -104,6 +101,9 @@ namespace ExpenseVista.API.Controllers
 
         // DELETE: api/categories/5
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var userId = GetUserId();

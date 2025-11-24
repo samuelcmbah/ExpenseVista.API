@@ -5,7 +5,9 @@ using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
 using ExpenseVista.API.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -34,6 +36,23 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
+// Register the output caching services
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("ShortCache", builder =>
+        builder.Expire(TimeSpan.FromSeconds(30)));
+
+    options.AddPolicy("LongCache", builder =>
+        builder.Expire(TimeSpan.FromMinutes(5)));
+});
+
+builder.Services.AddControllers(config =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+                     .RequireAuthenticatedUser()
+                     .Build();
+    config.Filters.Add(new AuthorizeFilter(policy));
+});
 
 // Load serilog.json
 builder.Configuration.AddJsonFile("serilog.json", optional: false, reloadOnChange: true);
@@ -78,7 +97,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        
+        ClockSkew = TimeSpan.Zero
     };
 
 });
