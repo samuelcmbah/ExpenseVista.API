@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -33,6 +34,17 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
+
+// Load serilog.json
+builder.Configuration.AddJsonFile("serilog.json", optional: false, reloadOnChange: true);
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
+
 builder.Services.AddHttpContextAccessor();//Http context used in classes. By default, only controllers and middleware have access to HttpContext
 // Add CORS with a default policy that allows predefined origin for api consumption
 var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")!.Split(";");
@@ -141,6 +153,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 // optional but recommended for clarity in minimal hosting
 //app.UseRouting();
+app.UseSerilogRequestLogging();
 
 app.UseCors();
 app.UseStaticFiles();

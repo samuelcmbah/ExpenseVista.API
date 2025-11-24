@@ -93,6 +93,7 @@ namespace ExpenseVista.API.Controllers
                 var (token, applicationUser) = await authService.LoginAsync(loginDTO);
 
                 // Success: Return 200 OK with the token and user data
+                logger.LogInformation("login succeeded");
                 return Ok(new { token, applicationUser });
             }
             catch (UnauthorizedAccessException ex)

@@ -76,7 +76,6 @@ namespace ExpenseVista.API.Services
         {
             var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            logger.LogWarning($"THIS IS THE ENCODED TOKEN, COPY AND USE IN SWAGGER {encodedToken}");
             var verifyUrl = $"{frontendUrl}/verify-email?token={encodedToken}&email={user.Email}";
             await emailService.SendEmailAsync(user.Email!,  verifyUrl);
         }
