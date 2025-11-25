@@ -190,7 +190,7 @@ app.UseHttpsRedirection();
 //app.UseRouting();
 app.UseSerilogRequestLogging();
 
-app.UseCors();
+app.UseCors("ClientPolicy");
 app.UseStaticFiles();
 
 app.UseAuthentication();
