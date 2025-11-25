@@ -66,15 +66,24 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 builder.Services.AddHttpContextAccessor();//Http context used in classes. By default, only controllers and middleware have access to HttpContext
 // Add CORS with a default policy that allows predefined origin for api consumption
-var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")!.Split(";");
+var allowedOrigins = builder.Configuration["AllowedOrigins"] ?? "";
+var origins = allowedOrigins
+    .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+    .Select(o => o.Trim())
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("ClientPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .WithExposedHeaders("total-records-count");
+        if (origins.Length == 0)
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+        }
     });
 });
 
@@ -116,10 +125,16 @@ builder.Services.AddHttpContextAccessor();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add AutoMapper 
 builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
+
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true)
+    .AddEnvironmentVariables();
+
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -181,6 +196,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 
 
 await CategorySeeder.EnsurePopulatedAsync(app);
