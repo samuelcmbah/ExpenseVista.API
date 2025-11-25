@@ -89,7 +89,8 @@ builder.Services.AddCors(options =>
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+var jwtKey = jwtSettings["Key"] ?? "Expen$eVista_Temporary_Key_For_Migrations_Only_123!";
+var key = Encoding.UTF8.GetBytes(jwtKey);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -113,6 +114,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Add DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 //Add Identity
@@ -123,9 +127,6 @@ builder.Services.AddScoped<UserManager<ApplicationUser>>();
 builder.Services.AddScoped<SignInManager<ApplicationUser>>();
 builder.Services.AddHttpContextAccessor();
 
-// Add DbContext
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add AutoMapper 
 builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
