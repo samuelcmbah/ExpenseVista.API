@@ -1,6 +1,7 @@
 ﻿using ExpenseVista.API.Configurations;
 using ExpenseVista.API.Services.IServices;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -50,7 +51,14 @@ public class EmailService : IEmailService
         try
         {
             logger.LogWarning ($"Attempting to send email to {to}");
-            await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            if (_emailSettings.UseStartTls)
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            }
+            else
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            }
             await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password); 
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
@@ -103,7 +111,14 @@ public class EmailService : IEmailService
         using var client = new SmtpClient();
         try
         {
-            await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            if (_emailSettings.UseStartTls)
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            }
+            else
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            }
             await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
             await client.SendAsync(message);
         }
@@ -145,7 +160,14 @@ public class EmailService : IEmailService
         using var client = new SmtpClient();
         try
         {
-            await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            if (_emailSettings.UseStartTls)
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            }
+            else
+            {
+                await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, _emailSettings.UseSsl);
+            }
             await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
             await client.SendAsync(message);
         }
