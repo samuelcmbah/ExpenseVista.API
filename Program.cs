@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Resend;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -32,8 +33,25 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<JwtService>();
 
-builder.Services.Configure<EmailSettings>(
-    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddHttpClient<ResendClient>();
+
+
+builder.Services.Configure<ResendEmailSettings>(
+    builder.Configuration.GetSection("ResendEmailSettings"));
+
+builder.Services.AddOptions(); // Required for options pattern
+builder.Services.AddHttpClient<ResendClient>(); // Registers the HttpClient used by the Resend client
+// Set the ApiToken for the ResendClientOptions from configuration
+builder.Services.Configure<ResendClientOptions>(o =>
+{
+    o.ApiToken = builder.Configuration["ResendEmailSettings:ApiKey"]!;
+});
+
+// register wrapper interface used by the library
+builder.Services.AddTransient<IResend, ResendClient>();
+// Register EmailService
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
 // Register the output caching services
