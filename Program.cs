@@ -20,6 +20,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddJsonFile("appsettings.Local.json", optional: true)
+    .AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -107,8 +113,11 @@ builder.Services.AddCors(options =>
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSettings["Key"] ?? "Expen$eVista_Temporary_Key_For_Migrations_Only_123!";
-var key = Encoding.UTF8.GetBytes(jwtKey);
+var jwtKey = string.IsNullOrWhiteSpace(jwtSettings["Key"])
+    ? "Expen$eVista_Temporary_Key_For_Migrations_Only_123!"
+    : jwtSettings["Key"];
+var key = Encoding.UTF8.GetBytes(jwtKey!);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -222,7 +231,6 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate();
 }
-
 
 
 await CategorySeeder.EnsurePopulatedAsync(app);

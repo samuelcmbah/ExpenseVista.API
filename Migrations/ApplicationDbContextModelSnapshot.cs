@@ -45,7 +45,7 @@ namespace ExpenseVista.API.Migrations
                     b.HasIndex("ApplicationUserId", "BudgetMonth")
                         .IsUnique();
 
-                    b.ToTable("Budgets");
+                    b.ToTable("Budgets", (string)null);
                 });
 
             modelBuilder.Entity("ExpenseVista.API.Models.Category", b =>
@@ -70,7 +70,7 @@ namespace ExpenseVista.API.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("ExpenseVista.API.Models.Transaction", b =>
@@ -117,7 +117,7 @@ namespace ExpenseVista.API.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

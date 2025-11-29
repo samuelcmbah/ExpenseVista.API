@@ -23,10 +23,7 @@ namespace ExpenseVista.API.Data
                 new Category { CategoryName = "Health", IsDefault = true },
                 new Category { CategoryName = "Salary", IsDefault = true },
                 new Category { CategoryName = "Betting", IsDefault = true },
-                new Category { CategoryName = "Investment", IsDefault = true },
-                new Category { CategoryName = "Funding", IsDefault = true },
-                new Category { CategoryName = "Transfers", IsDefault = true },
-                new Category { CategoryName = "Reversal", IsDefault = true }
+                new Category { CategoryName = "Investment", IsDefault = true }
             };
             //checks if the category alrady exists before seeding
             foreach (var cat in defaultCategories)
