@@ -74,27 +74,6 @@ namespace ExpenseVista.API.Services
             };
         }
 
-        public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)
-        {
-            var existingBudget = await context.Budgets
-                .FirstOrDefaultAsync(b => b.ApplicationUserId == userId &&
-                                            b.BudgetMonth.Month == budgetCreateDTO.BudgetMonth.Month &&
-                                            b.BudgetMonth.Year == budgetCreateDTO.BudgetMonth.Year);
-
-            if (existingBudget != null)
-            {
-                throw new InvalidOperationException("A budget already exists for the specified month.");
-            }
-
-            var budget = mapper.Map<Budget>(budgetCreateDTO)!;
-            budget.ApplicationUserId = userId;
-
-            await context.AddAsync(budget);
-            await context.SaveChangesAsync();
-
-            return mapper.Map<BudgetDTO>(budget)!;
-        }
-
         public async Task<IEnumerable<BudgetDTO>> GetAllBudgetsAsync(string userId)
         {
             var userBudgets = await context.Budgets
@@ -106,13 +85,45 @@ namespace ExpenseVista.API.Services
             return mapper.Map<IEnumerable<BudgetDTO>>(userBudgets)!;
         }
 
+        public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)
+        {
+            // Generate the budget month in UTC (1st day of current month)
+            var budgetMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            // Check if a budget already exists for this month
+            var existingBudget = await context.Budgets
+                .FirstOrDefaultAsync(b =>
+                    b.ApplicationUserId == userId &&
+                    b.BudgetMonth.Year == budgetMonth.Year &&
+                    b.BudgetMonth.Month == budgetMonth.Month);
+
+            if (existingBudget != null)
+            {
+                throw new InvalidOperationException("A budget already exists for this month.");
+            }
+
+            // Map DTO to entity, ignoring any BudgetMonth sent from frontend
+            var budget = mapper.Map<Budget>(budgetCreateDTO)!;
+            budget.ApplicationUserId = userId;
+            budget.BudgetMonth = budgetMonth; // set UTC month
+
+            await context.AddAsync(budget);
+            await context.SaveChangesAsync();
+
+            return mapper.Map<BudgetDTO>(budget)!;
+        }
+
+
         public async Task UpdateAsync(int id, BudgetUpdateDTO budgetUpdateDTO, string userId)
         {
             var budget = await GetBudgetEntityForUserAsync(id, userId);
-            mapper.Map(budgetUpdateDTO, budget);
+
+            // Only map fields that can change, not BudgetMonth
+            budget.MonthlyLimit = budgetUpdateDTO.MonthlyLimit;
 
             await context.SaveChangesAsync();
         }
+
 
         public async Task DeleteAsync(int id, string userId)
         {
