@@ -151,7 +151,8 @@ builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
 
 builder.Configuration
     .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddJsonFile("appsettings.Local.json", optional: true)
     .AddEnvironmentVariables();
 
 
@@ -190,7 +191,7 @@ builder.Services.AddSwaggerGen(options =>
                         },
                         new List<string>()
                     }
-     });//End here to use bearer token in swagger
+     });//to use bearer token in swagger
 
 });
 
