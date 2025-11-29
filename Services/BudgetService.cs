@@ -37,10 +37,8 @@ namespace ExpenseVista.API.Services
 
         public async Task<BudgetStatusDTO> GetBudgetStatusForMonthAsync(string userId)
         {
-           var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId);
+            var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId);
 
-            
-            // Try to fetch the budget for that month
             var budget = await context.Budgets
                 .AsNoTracking()
                 .FirstOrDefaultAsync(b =>
@@ -52,7 +50,7 @@ namespace ExpenseVista.API.Services
             if (budget == null)
             {
                 return new BudgetStatusDTO
-                {   
+                {
                     BudgetSet = false,
                     BudgetMonth = summary.StartDate,
                     MonthlyLimit = 0,
@@ -69,9 +67,7 @@ namespace ExpenseVista.API.Services
                 BudgetSet = true,
                 BudgetMonth = budget.BudgetMonth,
                 MonthlyLimit = budget.MonthlyLimit,
-                RemainingAmount = (budget.MonthlyLimit - summary.TotalExpenses) > 0
-                    ? (budget.MonthlyLimit - summary.TotalExpenses)
-                    : 0,
+                RemainingAmount = Math.Max(budget.MonthlyLimit - summary.TotalExpenses, 0),
                 PercentageUsed = budget.MonthlyLimit > 0
                     ? Math.Round((summary.TotalExpenses / budget.MonthlyLimit) * 100, 2)
                     : 0
