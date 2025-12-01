@@ -17,6 +17,7 @@ using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,7 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // Add services to the container.
-builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddTransient<GlobalExceptionMiddleware>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
@@ -39,14 +40,13 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<JwtService>();
 
+// Register EmailService
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient<ResendClient>();
-
-
 builder.Services.Configure<ResendEmailSettings>(
     builder.Configuration.GetSection("ResendEmailSettings"));
-
 builder.Services.AddOptions(); // Required for options pattern
-builder.Services.AddHttpClient<ResendClient>(); // Registers the HttpClient used by the Resend client
+builder.Services.AddHttpClient<ResendClient>(); 
 // Set the ApiToken for the ResendClientOptions from configuration
 builder.Services.Configure<ResendClientOptions>(o =>
 {
@@ -55,8 +55,6 @@ builder.Services.Configure<ResendClientOptions>(o =>
 
 // register wrapper interface used by the library
 builder.Services.AddTransient<IResend, ResendClient>();
-// Register EmailService
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
@@ -68,14 +66,6 @@ builder.Services.AddOutputCache(options =>
 
     options.AddPolicy("LongCache", builder =>
         builder.Expire(TimeSpan.FromMinutes(5)));
-});
-
-builder.Services.AddControllers(config =>
-{
-    var policy = new AuthorizationPolicyBuilder()
-                     .RequireAuthenticatedUser()
-                     .Build();
-    config.Filters.Add(new AuthorizeFilter(policy));
 });
 
 // Load serilog.json
@@ -145,7 +135,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
 //Add Identity
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -158,18 +147,24 @@ builder.Services.AddHttpContextAccessor();
 // Add AutoMapper 
 builder.Services.AddAutoMapper(typeof(AutoMappingConfiguration).Assembly);
 
-builder.Configuration
-    .AddJsonFile("appsettings.json")
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddJsonFile("appsettings.Local.json", optional: true)
-    .AddEnvironmentVariables();
+builder.Services.AddControllers(config =>
+{
+    // Global authorization policy
+    var policy = new AuthorizationPolicyBuilder()
+                     .RequireAuthenticatedUser()
+                     .Build();
+    config.Filters.Add(new AuthorizeFilter(policy));
 
+})
+.AddJsonOptions(options =>
+{
+    // CamelCase for JSON
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new DecimalTwoPlacesConverter());
-    });
+    // Custom Decimal converter
+    options.JsonSerializerOptions.Converters.Add(new DecimalTwoPlacesConverter());
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -221,6 +216,8 @@ app.UseSerilogRequestLogging();
 app.UseCors("ClientPolicy");
 app.UseStaticFiles();
 
+app.UseExceptionHandler("/error"); // fallback built-in handler
+app.UseMiddleware<GlobalExceptionMiddleware>(); //custom handler
 app.UseAuthentication();
 app.UseAuthorization();
 

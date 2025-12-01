@@ -36,7 +36,9 @@ namespace ExpenseVista.API.Configurations
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
                 .ForMember(dest => dest.ExchangeRate, opt => opt.Ignore())
-                .ForMember(dest => dest.ConvertedAmount, opt => opt.Ignore());
+                .ForMember(dest => dest.ConvertedAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.TransactionDate, opt =>
+                    opt.MapFrom(src => DateTime.SpecifyKind(src.TransactionDate, DateTimeKind.Utc))); ;
 
             // UPDATE: Map CategoryId from DTO to the model's FK
             CreateMap<TransactionUpdateDTO, Transaction>()

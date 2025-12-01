@@ -133,16 +133,15 @@ namespace ExpenseVista.API.Services
 
             if (category == null)
                 throw new InvalidOperationException("Invalid category or unauthorized access.");
+
             //get exhnage rate
             var rate = await exchangeRateService.GetRateAsync(transactionCreateDTO.Currency, baseCurrrency);
-
-            
             
             var transaction = mapper.Map<Transaction>(transactionCreateDTO)!;
             transaction.ApplicationUserId = userId;
             transaction.ExchangeRate = rate;
             transaction.ConvertedAmount = transactionCreateDTO.Amount * rate;
-
+            
             context.Transactions.Add(transaction);
             await context.SaveChangesAsync();
 

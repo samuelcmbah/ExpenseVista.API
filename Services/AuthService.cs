@@ -1,4 +1,5 @@
-﻿using ExpenseVista.API.Configurations;
+﻿using ExpenseVista.API.Common.Exceptions;
+using ExpenseVista.API.Configurations;
 using ExpenseVista.API.DTOs.Auth;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
@@ -48,7 +49,7 @@ namespace ExpenseVista.API.Services
                 .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
 
             if (existingUser != null)
-                return (false, new List<string> { "Email is already in use." });
+                throw new BadRequestException("Email is already in use.");
 
             // Create user
             var user = new ApplicationUser
@@ -83,7 +84,8 @@ namespace ExpenseVista.API.Services
         public async Task<bool> ConfirmEmailAsync(string email, string token)
         {
             var user = await userManager.FindByEmailAsync(email);
-            if (user == null) return false;
+            if (user == null)
+                throw new BadRequestException("Invalid or expired token.");
 
             var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
             var result = await userManager.ConfirmEmailAsync(user, decodedToken);
@@ -138,18 +140,20 @@ namespace ExpenseVista.API.Services
         public async Task<bool> ResetPasswordAsync(ResetPasswordDTO dto)
         {
             var user = await userManager.FindByEmailAsync(dto.Email);
-            if (user == null) return false;
+            if (user == null)
+                throw new BadRequestException("Invalid or expired token.");
+
 
             var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Token));
 
             var result = await userManager.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 
-            if(result.Succeeded)
+            if(!result.Succeeded)
             {
-                await emailService.SendPasswordChangedNotification(user.Email!);
-                return true;
+                throw new BadRequestException("Invalid or expired token.");
             }
-            return false;
+            await emailService.SendPasswordChangedNotification(user.Email!);
+            return true;
         }
 
     }
