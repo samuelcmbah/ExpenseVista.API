@@ -12,5 +12,6 @@
         public decimal RemainingAmount { get; set; }
         public decimal PercentageUsed { get; set; }
         public bool BudgetSet { get; internal set; }
+        public decimal OverSpent { get; internal set; }
     }
 }

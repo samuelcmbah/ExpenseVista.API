@@ -41,7 +41,7 @@ namespace ExpenseVista.API.Services
             };
         }
 
-        private FinancialTransactionAnalytics GetTransactionAnalytics(List<TransactionDTO> transactions, decimal totalIncome, decimal totalExpenses)
+        private FinancialTransactionAnalytics GetTransactionAnalytics(List<TransactionDTO> transactions, decimal totalIncome, decimal totalExpenses, decimal totalBudget)
         {
            
             var categorySpending = transactions
@@ -72,8 +72,8 @@ namespace ExpenseVista.API.Services
                 .OrderByDescending(c => c.Value)
                 .FirstOrDefault();
             var netBalance = totalIncome - totalExpenses;
-            var savingsRate = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
-
+            var budgetBalance = totalBudget - totalExpenses;
+           var overSpent = Math.Abs(totalBudget - totalExpenses);
             return new FinancialTransactionAnalytics
             {
                 Summary = new SummaryDTO
@@ -81,7 +81,8 @@ namespace ExpenseVista.API.Services
                     TotalIncome = totalIncome,
                     TotalExpenses = totalExpenses,
                     NetBalance = netBalance,
-                    SavingsRate = savingsRate
+                    BudgetBalance = budgetBalance,
+                    OverSpent = overSpent
                 },
                 SpendingByCategory = categorySpending,
                 IncomeVsExpenses = incomeVsExpenses,
@@ -116,8 +117,7 @@ namespace ExpenseVista.API.Services
                     keyInsights = new KeyInsightsDTO()
                 };
             }
-
-            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses);
+            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses, budgetProgress.Total);
 
             return new FinancialDataDTO
             {

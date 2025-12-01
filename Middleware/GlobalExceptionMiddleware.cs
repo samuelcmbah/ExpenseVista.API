@@ -63,10 +63,8 @@ public class GlobalExceptionMiddleware : IMiddleware
             BadRequestException badRequest =>
                 ((int)HttpStatusCode.BadRequest, "ERR_BAD_REQUEST", badRequest.Message),
 
-            UnauthorizedAccessException =>
-                ((int)HttpStatusCode.Unauthorized,
-                    "ERR_UNAUTHORIZED",
-                    "You are not authorized to perform this action."),
+            UnauthorizedAccessException unauthorized=>
+                ((int)HttpStatusCode.Unauthorized, "ERR_UNAUTHORIZED", unauthorized.Message),
 
             _ => ((int)HttpStatusCode.InternalServerError,
                 "ERR_UNEXPECTED",

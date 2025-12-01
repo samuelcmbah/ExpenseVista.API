@@ -67,7 +67,8 @@ namespace ExpenseVista.API.Services
                 BudgetSet = true,
                 BudgetMonth = budget.BudgetMonth,
                 MonthlyLimit = budget.MonthlyLimit,
-                RemainingAmount = Math.Max(budget.MonthlyLimit - summary.TotalExpenses, 0),
+                RemainingAmount = budget.MonthlyLimit - summary.TotalExpenses,
+                OverSpent = Math.Abs(budget.MonthlyLimit - summary.TotalExpenses),
                 PercentageUsed = budget.MonthlyLimit > 0
                     ? Math.Round((summary.TotalExpenses / budget.MonthlyLimit) * 100, 2)
                     : 0
