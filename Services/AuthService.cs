@@ -95,11 +95,14 @@ namespace ExpenseVista.API.Services
         public async Task<(string, ApplicationUserDTO)> LoginAsync(LoginDTO dto)
         {
             var user = await userManager.FindByEmailAsync(dto.Email);
-            if (user == null || !user.EmailConfirmed)
+            if (user == null)
             {
 
-                throw new UnauthorizedAccessException("Invalid credentials or email not verified.");
+                throw new UnauthorizedAccessException("Invalid credentials.");
             }
+
+            if (!user.EmailConfirmed)
+                throw new UnauthorizedAccessException("EMAIL_NOT_CONFIRMED");
 
             var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
