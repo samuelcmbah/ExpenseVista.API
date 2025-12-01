@@ -62,7 +62,9 @@ namespace ExpenseVista.API.Controllers
 
             var succeeded = await authService.ConfirmEmailAsync(verifyEmailDTO.Email, verifyEmailDTO.Token);
             if (!succeeded)
+            {
                 throw new BadRequestException("Verification failed.");
+            }
 
             return Ok(new { message = "Email has been verified." });
 
