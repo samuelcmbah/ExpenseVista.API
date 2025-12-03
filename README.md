@@ -1,28 +1,70 @@
-🚀 ExpenseVista
-Modern Personal Finance & Expense Tracking Platform
+# 🚀 ExpenseVista  
+A modern full-stack expense tracking application built with **.NET 8**, **PostgreSQL**, and **React + TypeScript**.
 
-A full-stack application designed to help users track expenses, analyze spending, and build healthier financial habits.
-Built with a production-ready architecture using .NET 8 Web API, PostgreSQL, and a React + TypeScript frontend.
+![Status](https://img.shields.io/badge/status-active-success)
+![Frontend](https://img.shields.io/badge/frontend-react-blue)
+![Backend](https://img.shields.io/badge/backend-.NET%208-purple)
+![License](https://img.shields.io/badge/license-MIT-green)
 
+---
 
-🌐 Live Demo
+## 📸 Screenshots
+*(Add images in `/screenshots` and reference them here)*
 
-Frontend: https://expensevista-frontend.vercel.app/
-API Base URL: https://expensevista-api.onrender.com
+![Dashboard](./screenshots/dashboard.png)
+![Analytics](./screenshots/analytics.png)
 
+---
 
-Why I Built ExpenseVista
+## 📘 Overview
+ExpenseVista helps users track expenses, analyze spending patterns, and visualize their financial activity with modern charts and dashboards.
 
-I wanted to build a real-world, full-stack financial application that demonstrates:
+This project showcases:
+- scalable backend architecture  
+- clean API design  
+- modern React frontend development  
+- authentication flows  
+- professional development workflow  
 
-Strong backend architecture
+---
 
-Modern React frontend development
+## 🛠️ Tech Stack
 
-Data visualization
+### **Backend**
+- .NET 8 Web API  
+- Entity Framework Core  
+- PostgreSQL  
+- Serilog  
+- AutoMapper  
+- FluentValidation  
 
-Secure authentication
+### **Frontend**
+- React (TypeScript)  
+- Vite  
+- TailwindCSS  
+- ShadCN UI  
+- React Query  
+- React Hook Form + Zod  
+- Recharts  
 
-Real user workflows
+---
 
-This project represents my growth as a developer and my readiness for professional engineering roles.
+## ✨ Features
+
+### **Core Features**
+- User authentication (JWT + refresh tokens)
+- Create, update, delete transactions
+- Category management
+- Filtering + pagination
+- Spending analytics with charts
+
+### **UI/UX**
+- Responsive layout
+- Consistent component system
+- Fast form validation
+
+---
+
+## 🏛️ Architecture
+
+### **Backend**
