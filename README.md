@@ -2,9 +2,10 @@
 
 A modern full-stack expense tracking application built with **.NET 8**, **PostgreSQL**, and **React + TypeScript**.
 
-[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-frontend.vercel.app/) 
+[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-frontend.vercel.app/)
 [![Frontend](https://img.shields.io/badge/frontend-react-blue)](https://github.com/samuelcmbah/expensevista)
 [![Backend](https://img.shields.io/badge/backend-.NET%208-purple)](https://github.com/samuelcmbah/ExpenseVista.API.git)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
@@ -103,7 +104,10 @@ This project showcases:
 ## 🏛️ Architecture
 
 ### **Backend Architecture**
-* Clean Architecture principles
+* Clean Architecture principles 
+
+[Image of Clean Architecture Diagram]
+
 * DTO-based communication
 * Repository + Service pattern
 * Global exception handling
@@ -113,7 +117,7 @@ This project showcases:
 ### **Frontend Architecture**
 * Component-driven design
 * API abstraction layer
-* Manual Data Fetching & State Management (via Context/Hooks)
+* **Manual Data Fetching & State Management (via Context/Hooks)**
 * Form schemas (Zod) for safe client-side validation
 * Typed data models (TypeScript)
 
@@ -132,12 +136,12 @@ ExpenseVista.API/
  ├── Models/
  ├── Middleware/
  ├── Migrations/
- ├── Services/       
- └── Utilities/      
+ ├── Services/
+ └── Utilities/
 \`\`\`
 
 ### **Frontend**
-**Frontend repo link:** *[add your GitHub link here]*
+**Frontend repo link:** [https://github.com/samuelcmbah/expensevista](https://github.com/samuelcmbah/expensevista)
 \`\`\`
 src/
  ├── components/
@@ -158,9 +162,11 @@ src/
 ### **Backend Setup**
 1.  \`git clone https://github.com/samuelcmbah/ExpenseVista.API.git\`
 2.  \`cd ExpenseVista.API\`
-3.  \`dotnet restore\`
-4.  \`dotnet ef database update\` (Ensure your PostgreSQL database is running and the connection string is set up)
-5.  \`dotnet run\`
+3.  **Obtain your PostgreSQL Connection String** (from a hosting service like **Render** or a local instance like **Docker/Loom**).
+4.  **Set the `ConnectionStrings__DefaultConnection`** environment variable.
+5.  \`dotnet restore\`
+6.  \`dotnet ef database update\` (This applies migrations to your chosen database.)
+7.  \`dotnet run\`
 
 > **Note:** The backend runs by default on: \`https://localhost:7000\`
 
@@ -170,7 +176,7 @@ src/
 3.  \`npm install\`
 4.  \`npm run dev\`
 
-> **Note:** The frontend runs by default on port \`http://localhost:5000\`.
+> **Note:** The frontend runs by default on port \`http://localhost:5000\` (or \`http://localhost:5173\`).
 
 ---
 
@@ -193,8 +199,9 @@ VITE_API_URL=https://localhost:7000/api
 
 ## 🚀 Deployment
 
-* **Backend:** [Render](https://expensevista-api.onrender.com) 
-* **Frontend:** [Vercel](https://expensevista-frontend.vercel.app/) 
+* **Backend:** [Render](https://expensevista-api.onrender.com)
+* **Frontend:** [Vercel](https://expensevista-frontend.vercel.app/)
+
 ---
 
 ## 🗺️ Roadmap
@@ -212,8 +219,9 @@ Planned future improvements:
 Contributions and suggestions are welcome! Feel free to open an issue or submit a pull request.
 
 ---
+
 ## 🧑‍💻 Author
 
 **Samuel Mbah**
 * **GitHub:** [samuelcmbah](https://github.com/samuelcmbah)
-* **LinkedIn:** [Samuel Mbah] (https://linkedin.com/in/samuelcmbah)
+* **LinkedIn:** [Samuel Mbah](https://linkedin.com/in/samuelcmbah)
