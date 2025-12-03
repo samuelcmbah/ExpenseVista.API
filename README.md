@@ -168,7 +168,7 @@ src/
 5.  `dotnet restore
 6.  dotnet ef database update\` (This applies migrations to your chosen database.)
 7.  dotnet run
-
+```
 > **Note:** The backend runs by default on: \`https://localhost:7000\`
 
 ### **Frontend Setup**
