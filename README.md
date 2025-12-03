@@ -160,15 +160,20 @@ src/
 ## ⚙️ Installation & Setup
 
 ### **Backend Setup**
+
 ```bash
-1.  git clone https://github.com/samuelcmbah/ExpenseVista.API.git
-2.  cd ExpenseVista.API
-3.  **Obtain your PostgreSQL Connection String** (from a hosting service like **Render** or a local instance like **Docker/Loom**).
-4.  **Set the `ConnectionStrings__DefaultConnection`** environment variable.
-5.  `dotnet restore
-6.  dotnet ef database update\` (This applies migrations to your chosen database.)
-7.  dotnet run
+git clone https://github.com/samuelcmbah/ExpenseVista.API.git
+cd ExpenseVista.API
+
+# Obtain your PostgreSQL Connection String (Render, Docker, or local install)
+# Then set the environment variable:
+#   ConnectionStrings__DefaultConnection=<your-connection-string>
+
+dotnet restore
+dotnet ef database update   # Applies migrations
+dotnet run
 ```
+
 > **Note:** The backend runs by default on: \`https://localhost:7000\`
 
 ### **Frontend Setup**
