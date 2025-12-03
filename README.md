@@ -126,7 +126,7 @@ This project showcases:
 ## 📁 Project Structure
 
 ### **Backend**
-\`\`\`
+```
 ExpenseVista.API/
  ├── Configurations/
  ├── Controllers/
@@ -138,11 +138,11 @@ ExpenseVista.API/
  ├── Migrations/
  ├── Services/
  └── Utilities/
-\`\`\`
+```
 
 ### **Frontend**
 **Frontend repo link:** [https://github.com/samuelcmbah/expensevista](https://github.com/samuelcmbah/expensevista)
-\`\`\`
+```
 src/
  ├── components/
  ├── context/
@@ -153,28 +153,31 @@ src/
  ├── services/
  ├── types/
  └── utilities/
-\`\`\`
+```
 
 ---
 
 ## ⚙️ Installation & Setup
 
 ### **Backend Setup**
-1.  \`git clone https://github.com/samuelcmbah/ExpenseVista.API.git\`
-2.  \`cd ExpenseVista.API\`
+```bash
+1.  git clone https://github.com/samuelcmbah/ExpenseVista.API.git
+2.  cd ExpenseVista.API
 3.  **Obtain your PostgreSQL Connection String** (from a hosting service like **Render** or a local instance like **Docker/Loom**).
 4.  **Set the `ConnectionStrings__DefaultConnection`** environment variable.
-5.  \`dotnet restore\`
-6.  \`dotnet ef database update\` (This applies migrations to your chosen database.)
-7.  \`dotnet run\`
+5.  `dotnet restore
+6.  dotnet ef database update\` (This applies migrations to your chosen database.)
+7.  dotnet run
 
 > **Note:** The backend runs by default on: \`https://localhost:7000\`
 
 ### **Frontend Setup**
-1.  \`git clone https://github.com/samuelcmbah/expensevista.git\`
-2.  \`cd expensevista\`
-3.  \`npm install\`
-4.  \`npm run dev\`
+```
+1.  git clone https://github.com/samuelcmbah/expensevista.git
+2.  cd expensevista
+3.  npm install
+4.  npm run dev
+```
 
 > **Note:** The frontend runs by default on port \`http://localhost:5000\` (or \`http://localhost:5173\`).
 
@@ -183,18 +186,17 @@ src/
 ## 🔐 Environment Variables
 
 ### **Backend (`appsettings.json` or environment variables)**
-\`\`\`
+```
 ConnectionStrings__DefaultConnection=YourPostgresConnection
 Jwt__Key=YourSecretKeyForJWT
 Jwt__Issuer=apidomain.com
 Jwt__Audience=clientdomain.com
 ResendEmailSettings__ApiKey=re_xxxxxxxxxxxxxxxxxxxxxxxx
-\`\`\`
+```
 ### **Frontend (`.env` file)**
-\`\`\`
+```
 VITE_API_URL=https://localhost:7000/api
-\`\`\`
-
+```
 ---
 
 ## 🚀 Deployment
