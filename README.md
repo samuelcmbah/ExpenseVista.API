@@ -54,6 +54,7 @@ This project showcases:
 * [Serilog](https://serilog.net/) (Structured logging)
 * [Resend](https://resend.com/) (Email sending service)
 * [Swashbuckle/Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) (API documentation)
+* **Caching:** `IMemoryCache` (for rate optimization)
 * **Identity:** `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (User management)
 
 ### **Frontend**
@@ -80,6 +81,7 @@ This project showcases:
 
 ### **Transaction Management**
 * Create, update, delete transactions
+* Real-time Currency Conversion: Automatically converts foreign currency transactions to user's base currency (NGN), using external API rates.
 * Categorized income & expenses
 * Filtering, sorting, and pagination
 * Date-based queries
