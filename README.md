@@ -65,8 +65,8 @@ ExpenseVista.API/
  └── Utilities/        # Helper functions
 
 ```
-##⚙️ Installation & Setup
-#Prerequisites
+## ⚙️ Installation & Setup
+# Prerequisites
 - .NET 8 SDK
 - PostgreSQL
 
@@ -108,14 +108,14 @@ dotnet run
 
 The API will start on https://localhost:7000 (or the port configured in launchSettings).
 
-🚀 Deployment
-The API is currently deployed on Render.
-Base URL: https://expensevista-api.onrender.com
+## 🚀 Deployment
+* The API is currently deployed on Render.
+* Base URL: https://expensevista-api.onrender.com
 
-🤝 Contributions
+## 🤝 Contributions
 Contributions are welcome! Please fork the repository and submit a pull request.
 
-🧑‍💻 Author
-Samuel Mbah
-GitHub: [samuelcmbah](https://github.com/samuelcmbah)
-LinkedIn: [Samuel Mbah](https://linkedin.com/in/samuelcmbah)
+## 🧑‍💻 Author
+* Samuel Mbah
+* GitHub: [samuelcmbah](https://github.com/samuelcmbah)
+* LinkedIn: [Samuel Mbah](https://linkedin.com/in/samuelcmbah)
