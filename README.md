@@ -1,234 +1,121 @@
-# 🚀 ExpenseVista
 
-A modern full-stack expense tracking application built with **.NET 8**, **PostgreSQL**, and **React + TypeScript**.
+# 🚀 ExpenseVista API
 
-[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-frontend.vercel.app/)
-[![Frontend](https://img.shields.io/badge/frontend-react-blue)](https://github.com/samuelcmbah/expensevista)
-[![Backend](https://img.shields.io/badge/backend-.NET%208-purple)](https://github.com/samuelcmbah/ExpenseVista.API.git)
+The robust backend API for **ExpenseVista**, a modern Personal Finance tracking platform. Built with **.NET 8**, **PostgreSQL**, and **Entity Framework Core**, designed using Clean Architecture principles.
+
+[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-api.onrender.com/swagger/index.html)
+[![Frontend Repo](https://img.shields.io/badge/frontend-React-blue)](https://github.com/samuelcmbah/expensevista)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
----
-
-## 🙋‍♂️ Why I Built ExpenseVista
-
-I wanted to build a real-world, full-stack financial application that demonstrates:
-* Strong backend architecture
-* Modern React frontend development
-* Data visualization
-* Secure authentication
-* Real user workflows
-
-This project represents my growth as a developer and my readiness for professional engineering roles.
-
----
-
-## 📸 Screenshots
-
-| Dashboard | Analytics |
-| :---: | :---: |
-| ![Dashboard Screenshot](./screenshots/dashboard.png) | ![Analytics Screenshot](./screenshots/analytics.png) |
 
 ---
 
 ## 📘 Overview
 
-ExpenseVista helps users track expenses, analyze spending patterns, and visualize their financial activity with modern charts and dashboards.
+This API serves as the core engine for ExpenseVista, handling data persistence, business logic, authentication, and secure communication with the client. It demonstrates professional backend engineering practices including DTO mapping, structured logging, and JWT security.
 
-This project showcases:
-* Scalable backend architecture
-* Clean API design
-* Modern React frontend development
-* Authentication flows
-* Professional development workflow
+**Live API/Swagger:** [https://expensevista-api.onrender.com/swagger](https://expensevista-api.onrender.com/swagger)
 
 ---
 
 ## 🛠️ Tech Stack
 
-### **Backend**
-* [.NET 8 Web API](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-* [PostgreSQL](https://www.postgresql.org/) (via [Npgsql](https://www.npgsql.org/))
-* [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/) (ORM for data access)
-* [JWT Authentication](https://jwt.io/) (via `Microsoft.AspNetCore.Authentication.JwtBearer`)
-* [AutoMapper](https://automapper.org/) (Object-to-object mapping)
-* [Serilog](https://serilog.net/) (Structured logging)
-* [Resend](https://resend.com/) (Email sending service)
-* [Swashbuckle/Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) (API documentation)
-* **Identity:** `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (User management)
-
-### **Frontend**
-* [React (TypeScript)](https://react.dev/)
-* [Vite](https://vitejs.dev/)
-* [Tailwind CSS](https://tailwindcss.com/) + [ShadCN UI](https://ui.shadcn.com/) (Styling and components)
-* [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) (Form management and validation)
-* [Axios](https://axios-http.com/) (HTTP client for API requests)
-* [Recharts](https://recharts.org/) (Data visualization/charts)
-* [Lucide React](https://lucide.dev/icons/) (Icon library)
-* [React Hot Toast](https://react-hot-toast.com/) (Notifications and alerts)
-* [Framer Motion](https://www.framer.com/motion/) (Animations and transitions)
-* [Radix UI](https://www.radix-ui.com/) (Primitives for component building)
-* [React Router DOM](https://reactrouter.com/web/guides/quick-start) (Client-side routing)
-
----
-
-## ✨ Features
-
-### **Authentication & Security**
-* User registration & login
-* Secure JWT authentication
-* Password hashing
-
-### **Transaction Management**
-* Create, update, delete transactions
-* Categorized income & expenses
-* Filtering, sorting, and pagination
-* Date-based queries
-
-### **Category Management**
-* Custom categories
-* System categories
-
-### **Analytics Dashboard**
-* Monthly and yearly spending summaries
-* Category breakdown
-* Pie and bar charts
-* Trend visualization
-
-### **Beautiful, Modern UI**
-* Mobile-friendly (responsive design)
-* Clean UX with reusable components
-* Form validation with Zod
+* **Framework:** [.NET 8 Web API](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+* **Database:** [PostgreSQL](https://www.postgresql.org/) (via Npgsql)
+* **ORM:** [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)
+* **Identity & Auth:** Microsoft Identity + [JWT Bearer Authentication](https://jwt.io/)
+* **Mapping:** [AutoMapper](https://automapper.org/)
+* **Logging:** [Serilog](https://serilog.net/) (Structured logging)
+* **Email Service:** [Resend](https://resend.com/)
+* **Documentation:** [Swashbuckle/Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
 
 ---
 
 ## 🏛️ Architecture
 
-### **Backend Architecture**
-* Clean Architecture principles 
+This project follows **Clean Architecture** principles to ensure separation of concerns and maintainability.
 
-[Image of Clean Architecture Diagram]
+* **Repository + Service Pattern:** Decouples business logic from data access.
+* **DTO-based Communication:** Ensures the internal domain model is never exposed directly to the client.
+* **Global Exception Handling:** Centralized middleware for handling errors gracefully.
+* **Dependency Injection:** Heavy use of .NET built-in DI container.
 
-* DTO-based communication
-* Repository + Service pattern
-* Global exception handling
-* Logging with Serilog
-* Strong separation of concerns
+---
 
-### **Frontend Architecture**
-* Component-driven design
-* API abstraction layer
-* **Manual Data Fetching & State Management (via Context/Hooks)**
-* Form schemas (Zod) for safe client-side validation
-* Typed data models (TypeScript)
+## ✨ API Features
+
+* **Authentication:** User registration, login, and JWT token generation.
+* **Transaction Management:** CRUD operations for expenses and income with filtering, sorting, and pagination.
+* **Analytics Data:** Aggregated endpoints providing data for charts (monthly breakdowns, category summaries).
+* **Category System:** Management of system-defined and user-defined categories.
 
 ---
 
 ## 📁 Project Structure
 
-### **Backend**
-```
+```text
 ExpenseVista.API/
- ├── Configurations/
- ├── Controllers/
- ├── Data/
- ├── DTOs/
- ├── logs/
- ├── Models/
- ├── Middleware/
- ├── Migrations/
- ├── Services/
- └── Utilities/
+ ├── Configurations/   # DI configs and AutoMapper profiles
+ ├── Controllers/      # API Endpoints
+ ├── Data/             # DbContext and seeding
+ ├── DTOs/             # Data Transfer Objects
+ ├── Models/           # Domain Entities
+ ├── Middleware/       # Exception handling, logging
+ ├── Migrations/       # EF Core Migrations
+ ├── Services/         # Business Logic
+ └── Utilities/        # Helper functions
+
 ```
+##⚙️ Installation & Setup
+#Prerequisites
+- .NET 8 SDK
+- PostgreSQL
 
-### **Frontend**
-**Frontend repo link:** [https://github.com/samuelcmbah/expensevista](https://github.com/samuelcmbah/expensevista)
-```
-src/
- ├── components/
- ├── context/
- ├── hooks/
- ├── lib/
- ├── pages/
- ├── schemas/
- ├── services/
- ├── types/
- └── utilities/
-```
-
----
-
-## ⚙️ Installation & Setup
-
-### **Backend Setup**
-
+Steps
+1. Clone the repository
 ```bash
 git clone https://github.com/samuelcmbah/ExpenseVista.API.git
 cd ExpenseVista.API
+```
 
-# Obtain your PostgreSQL Connection String (Render, Docker, or local install)
-# Then set the environment variable:
-#   ConnectionStrings__DefaultConnection=<your-connection-string>
+2. Configure Environment Variables
+Update appsettings.json or set User Secrets:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=ExpenseVistaDb;Username=postgres;Password=yourpassword"
+  },
+  "Jwt": {
+    "Key": "Your_Super_Secret_Key_Must_Be_Long_Enough",
+    "Issuer": "https://localhost:7000",
+    "Audience": "https://localhost:5173"
+  },
+  "ResendEmailSettings": {
+    "ApiKey": "re_your_api_key"
+  }
+}
+```
 
+3. Apply Migrations
+```bash
 dotnet restore
-dotnet ef database update   # Applies migrations
+dotnet ef database update
+```
+
+4. Run the Application
+```bash
 dotnet run
 ```
 
-> **Note:** The backend runs by default on: \`https://localhost:7000\`
+The API will start on https://localhost:7000 (or the port configured in launchSettings).
 
-### **Frontend Setup**
-```
-1.  git clone https://github.com/samuelcmbah/expensevista.git
-2.  cd expensevista
-3.  npm install
-4.  npm run dev
-```
+🚀 Deployment
+The API is currently deployed on Render.
+Base URL: https://expensevista-api.onrender.com
 
-> **Note:** The frontend runs by default on port \`http://localhost:5000\` (or \`http://localhost:5173\`).
+🤝 Contributions
+Contributions are welcome! Please fork the repository and submit a pull request.
 
----
-
-## 🔐 Environment Variables
-
-### **Backend (`appsettings.json` or environment variables)**
-```
-ConnectionStrings__DefaultConnection=YourPostgresConnection
-Jwt__Key=YourSecretKeyForJWT
-Jwt__Issuer=apidomain.com
-Jwt__Audience=clientdomain.com
-ResendEmailSettings__ApiKey=re_xxxxxxxxxxxxxxxxxxxxxxxx
-```
-### **Frontend (`.env` file)**
-```
-VITE_API_URL=https://localhost:7000/api
-```
----
-
-## 🚀 Deployment
-
-* **Backend:** [Render](https://expensevista-api.onrender.com)
-* **Frontend:** [Vercel](https://expensevista-frontend.vercel.app/)
-
----
-
-## 🗺️ Roadmap
-
-Planned future improvements:
-
-* Third-party payment integration
-* Export data (CSV / PDF)
-* Dark mode
-
----
-
-## 🤝 Contributions
-
-Contributions and suggestions are welcome! Feel free to open an issue or submit a pull request.
-
----
-
-## 🧑‍💻 Author
-
-**Samuel Mbah**
-* **GitHub:** [samuelcmbah](https://github.com/samuelcmbah)
-* **LinkedIn:** [Samuel Mbah](https://linkedin.com/in/samuelcmbah)
+🧑‍💻 Author
+Samuel Mbah
+GitHub: [samuelcmbah](https://github.com/samuelcmbah)
+LinkedIn: [Samuel Mbah](https://linkedin.com/in/samuelcmbah)
