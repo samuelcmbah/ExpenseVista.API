@@ -16,7 +16,7 @@ namespace ExpenseVista.API.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Budget> Budgets { get; set; }
-
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -44,6 +44,12 @@ namespace ExpenseVista.API.Data
                 .HasOne(t => t.ApplicationUser)
                 .WithMany(u => u.Transactions)
                 .HasForeignKey(t => t.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<RefreshToken>()
+                .HasOne(rt => rt.ApplicationUser)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             //prevents race condition problem for concurrent requests

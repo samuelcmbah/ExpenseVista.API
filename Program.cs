@@ -2,6 +2,7 @@ using ExpenseVista.API.Configurations;
 using ExpenseVista.API.Data;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
+using ExpenseVista.API.Services.Background;
 using ExpenseVista.API.Services.IServices;
 using ExpenseVista.API.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,6 +40,8 @@ builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<JwtService>();
+// Register the background worker
+builder.Services.AddHostedService<TokenCleanupService>();
 
 // Register EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -96,7 +99,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+            policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         }
     });
 });
@@ -124,7 +127,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.FromSeconds(30)
     };
 
 });

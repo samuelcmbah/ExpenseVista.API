@@ -13,5 +13,6 @@ namespace ExpenseVista.API.Models
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public ICollection<Category> Categories { get; set; } = new List<Category>(); 
         public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

@@ -5,6 +5,7 @@ using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -17,7 +18,7 @@ namespace ExpenseVista.API.Controllers
     [Route("api/auth")]
     [ApiController]
     [AllowAnonymous]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
@@ -53,6 +54,85 @@ namespace ExpenseVista.API.Controllers
             return Ok(new { message = "User registered successfully" });
         }
 
+        [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+        {
+
+            var result = await authService.LoginAsync(loginDTO);
+
+            // Success: Return 200 OK with the token and user data
+            logger.LogInformation("login succeeded");
+            // CRITICAL: If SameSite is None, Secure MUST be true.
+            // Even on localhost, if you are doing Cross-Origin (Port 5000 to 7000), use this.
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,  
+                SameSite = SameSiteMode.None,
+                Expires = result.tokenResponse.RefreshTokenExpiresAt ,
+            };
+            Response.Cookies.Append("refreshToken", result.tokenResponse.RefreshToken, cookieOptions);
+            //return only access token and user info to frontend
+            return Ok(new 
+            { 
+                token = new { accessToken = result.tokenResponse.AccessToken},
+                user = result.applicationUserDTO
+            });
+
+        }
+
+        [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Refresh()
+        {
+            // 1. Read from Cookie
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                return Unauthorized("No refresh token provided");
+            }
+            // 2. Call the updated service (passing only the string)
+            var result = await authService.RefreshTokenAsync(refreshToken);
+
+            // 3. Set the NEW cookie (Rotation)
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.None,
+                Expires = result.RefreshTokenExpiresAt
+            };
+
+            Response.Cookies.Append("refreshToken", result.RefreshToken, cookieOptions);
+
+            // 4. Return the new Access Token
+            return Ok(new { accessToken = result.AccessToken });
+        }
+
+        [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> Logout()
+        {
+            // If user is authenticated, revoke tokens for current user
+            var userId = GetUserId();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await authService.LogoutAsync(userId);
+            }
+
+            // Overwrite the cookie with an expired one
+            Response.Cookies.Append("refreshToken", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(-1)
+            });
+            return Ok(new { message = "Logged out" });
+        }
 
         [HttpPost("confirm-email")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -85,21 +165,6 @@ namespace ExpenseVista.API.Controllers
             await authService.SendVerificationAsync(user);
 
             return Ok(new { message = "Verification email resent." });
-        }
-
-
-
-        [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
-        {
-           
-                var (token, applicationUser) = await authService.LoginAsync(loginDTO);
-
-                // Success: Return 200 OK with the token and user data
-                logger.LogInformation("login succeeded");
-                return Ok(new { token, applicationUser });
-           
         }
 
         [HttpPost("forgot-password")]
