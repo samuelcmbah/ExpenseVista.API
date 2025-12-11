@@ -101,7 +101,7 @@ namespace ExpenseVista.API.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = Request.IsHttps,
+                Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = result.RefreshTokenExpiresAt
             };
@@ -127,7 +127,7 @@ namespace ExpenseVista.API.Controllers
             Response.Cookies.Append("refreshToken", "", new CookieOptions
             {
                 HttpOnly = true,
-                Secure = Request.IsHttps,
+                Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(-1)
             });
