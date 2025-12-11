@@ -30,14 +30,42 @@ This API serves as the core engine for ExpenseVista, handling data persistence, 
 
 ---
 
-## 🏛️ Architecture
+## 🏗️ Architecture & Design
 
-This project follows **Clean Architecture** principles to ensure separation of concerns and maintainability.
+The **ExpenseVista** backend is engineered as a **Layered Monolith** using **ASP.NET 8+**. This architectural choice prioritizes maintainability, strict separation of concerns, and robust testability by adhering to modern C# design principles.
 
-* **Repository + Service Pattern:** Decouples business logic from data access.
-* **DTO-based Communication:** Ensures the internal domain model is never exposed directly to the client.
-* **Global Exception Handling:** Centralized middleware for handling errors gracefully.
-* **Dependency Injection:** Heavy use of .NET built-in DI container.
+### 📂 Core Architectural Layers
+The application is logically divided into three distinct layers, organized by function within the API project:
+
+| Layer | Component | Responsibilities |
+| :--- | :--- | :--- |
+| **Presentation** | `Controllers` | Handles API interactions, routing, HTTP request reception, input validation, and final response generation. **Controllers remain thin** and contain no business logic. |
+| **Business Logic** | `Services` | The core application brain. Contains all business rules, performs complex calculations, orchestrates data flow, and manages external integrations (e.g., JWT generation, Email services). |
+| **Persistence** | `Data` & `Models` | Manages data access and storage. **Models** define the database schema (via EF Core), while the **Data** folder encapsulates `DbContext` and migration logic. |
+
+### 🧩 Key Design Patterns & Principles
+
+#### 1. Separation of Concerns (Service-First Approach)
+We adhere strictly to the **Controller-Service Pattern**. Controllers are designed to be "thin"—they purely handle HTTP concerns and immediately delegate functional tasks to the appropriate service interface (e.g., `IAuthService`, `IAnalyticsService`).
+
+#### 2. Dependency Injection (DI)
+The application leverages the native .NET DI container to ensure loose coupling. All external dependencies (such as `UserManager`, `ILogger`, and Service Interfaces) are injected via constructors. This makes the system highly modular and simplifies unit testing via mocking.
+
+#### 3. DTO-Based Communication
+To protect the internal database structure and prevent over-posting attacks, **Data Transfer Objects (DTOs)** are used exclusively for external communication:
+*   **Input DTOs:** (e.g., `RegisterDTO`) Used to deserialize and validate incoming JSON requests.
+*   **Output DTOs:** (e.g., `ApplicationUserDTO`) Used to shape the data returned to the client.
+*   *Note: Internal Domain Models are never exposed directly to the API consumer.*
+
+#### 4. Global Error Handling
+A custom **Exception Handling Middleware** acts as a centralized safety net. Business logic exceptions (e.g., a custom `BadRequestException`) are caught globally and standardized into consistent HTTP error responses before reaching the client, ensuring a uniform API experience.
+
+### 🔐 Security & Authentication
+The API implements a secure, stateful **JWT (JSON Web Token)** implementation with **Refresh Token Rotation**:
+
+*   **Access Tokens:** Short-lived tokens used for Authorization headers.
+*   **Refresh Tokens:** Long-lived tokens stored securely in **HttpOnly cookies** (inaccessible to client-side JavaScript) and persisted in the database.
+*   **Token Rotation:** The `/auth/refresh` endpoint invalidates the old Refresh Token and issues a new pair, providing maximum security against token hijacking and replay attacks.
 
 ---
 
