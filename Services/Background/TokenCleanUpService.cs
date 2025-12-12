@@ -49,7 +49,7 @@ namespace ExpenseVista.API.Services.Background
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
                 // Define Logic: Delete tokens that expired more than 30 days ago
-                var cutoffDate = DateTime.UtcNow.AddDays(30);
+                var cutoffDate = DateTime.UtcNow.AddDays(-30);
 
                 // EXECUTE DELETE is very fast because it runs a raw SQL DELETE command.
                 var count = await dbContext.RefreshTokens
