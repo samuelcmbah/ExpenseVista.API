@@ -12,7 +12,7 @@ public class ExchangeRateService : IExchangeRateService
         _httpClient = httpClient;
         _cache = cache;
     }
-
+    //tries to get a live rate
     public async Task<decimal> GetRateAsync(string fromCurrency, string toCurrency)
     {
         // Try reading from cache first
@@ -40,9 +40,28 @@ public class ExchangeRateService : IExchangeRateService
 
         // Now we are guaranteed to have data (from API or cache)
         if (!cachedRates!.Rates.TryGetValue(toCurrency, out var rate))
+        {
             throw new Exception($"Rate for {toCurrency} not found in cached data.");
+        }
 
         return rate;
+    }
+
+    //safely get a cached rate without an API call.
+    public Task<decimal?> GetCachedRateAsync(string fromCurrency, string toCurrency)
+    {
+        var cacheKey = $"exchange_rates_{fromCurrency.ToUpper()}";
+
+        if (_cache.TryGetValue(cacheKey, out ExchangeRateResponse? cachedRates) && cachedRates != null)
+        {
+            if (cachedRates.Rates.TryGetValue(toCurrency, out var rate))
+            {
+                return Task.FromResult<decimal?>(rate);
+            }
+        }
+
+        // Return null if not found in cache
+        return Task.FromResult<decimal?>(null);
     }
 
     public async Task<List<string>> GetSupportedCurrenciesAsync()

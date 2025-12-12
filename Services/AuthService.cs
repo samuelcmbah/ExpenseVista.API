@@ -146,7 +146,7 @@ namespace ExpenseVista.API.Services
             // Hash the provided refresh token and find in DB
             var providedHash = jwtService.HashToken(refreshTokenRaw);
 
-            // 3. Find the token in the DB and INCLUDE the User
+            // Find the token in the DB and INCLUDE the User
             var storedToken = await dbContext.RefreshTokens
                 .Include(t => t.ApplicationUser) // <--- Load the user here!
                 .FirstOrDefaultAsync(t => t.TokenHash == providedHash);

@@ -31,7 +31,7 @@ namespace ExpenseVista.API.Services
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var durationMinutes = double.Parse(jwtSettings["AcessTokenDurationInMinutes"] ?? "15");
-            expiresAt = DateTime.UtcNow.AddMinutes(durationMinutes);
+            expiresAt = DateTime.UtcNow.AddSeconds(durationMinutes);
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],

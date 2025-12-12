@@ -23,17 +23,18 @@ namespace ExpenseVista.API.Services
         private readonly IMapper mapper;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IExchangeRateService exchangeRateService;
-
+        private readonly ILogger<TransactionService> logger;
         private readonly string baseCurrrency;
 
         public TransactionService(ApplicationDbContext context, IMapper mapper, 
             IHttpContextAccessor httpContextAccessor, IExchangeRateService exchangeRateService,
-            IOptions<AppSettings> appSettings)
+            IOptions<AppSettings> appSettings, ILogger<TransactionService> logger)
         {
             this.context = context;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
             this.exchangeRateService = exchangeRateService;
+            this.logger = logger;
             baseCurrrency = appSettings.Value.BaseCurrency;
         }
 
@@ -125,7 +126,7 @@ namespace ExpenseVista.API.Services
 
         public async Task<TransactionDTO> CreateAsync(TransactionCreateDTO transactionCreateDTO, string userId)
         {
-            //checking of to tie the trans to a cat and user
+            //validate category
             var category = await context.Categories
                 .FirstOrDefaultAsync(c => 
                 c.Id == transactionCreateDTO.CategoryId &&
@@ -133,10 +134,41 @@ namespace ExpenseVista.API.Services
 
             if (category == null)
                 throw new InvalidOperationException("Invalid category or unauthorized access.");
-
-            //get exhnage rate
-            var rate = await exchangeRateService.GetRateAsync(transactionCreateDTO.Currency, baseCurrrency);
             
+            decimal rate;
+
+            // Check if the transaction is already in the base currency
+            if (transactionCreateDTO.Currency.Equals("NGN", StringComparison.OrdinalIgnoreCase))
+            {
+                rate = 1m;
+            }
+            else
+            {
+                // For all other currencies, fetch the rate using the resilient try/catch/fallback logic
+                try
+                {
+                    // Attempt to get the live exchange rate
+                    rate = await exchangeRateService.GetRateAsync(transactionCreateDTO.Currency, baseCurrrency);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Live exchange rate API failed for currency {Currency}. Falling back to cached rate.", transactionCreateDTO.Currency);
+
+                    // Fallback to a cached rate
+                    var cachedRate = await exchangeRateService.GetCachedRateAsync(transactionCreateDTO.Currency, baseCurrrency);
+
+                    if (cachedRate.HasValue)
+                    {
+                        rate = cachedRate.Value;
+                    }
+                    else
+                    {
+                        // Critical failure: The API is down AND we have no cached rate to fall back on.
+                        throw new InvalidOperationException($"Could not determine the exchange rate for {transactionCreateDTO.Currency}. Please try again later.");
+                    }
+                }
+            }
+
             var transaction = mapper.Map<Transaction>(transactionCreateDTO)!;
             transaction.ApplicationUserId = userId;
             transaction.ExchangeRate = rate;

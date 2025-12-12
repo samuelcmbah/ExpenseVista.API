@@ -114,6 +114,7 @@ namespace ExpenseVista.API.Controllers
 
         [HttpPost("logout")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             // If user is authenticated, revoke tokens for current user
