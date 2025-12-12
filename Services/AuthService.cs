@@ -128,8 +128,9 @@ namespace ExpenseVista.API.Services
         {
             var clientId = configuration["Google:ClientId"];
             var clientSecret = configuration["Google:ClientSecret"];
+            var frontendUrl = configuration["ApiSettings:FrontendUrl"];
             // This must be the SAME URI you registered in Google Cloud Console
-            var redirectUri = "http://localhost:5000/auth/google/callback";
+            var redirectUri = $"{frontendUrl}/auth/google/callback";
 
             var tokenRequest = new
             {
