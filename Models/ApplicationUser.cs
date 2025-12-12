@@ -8,6 +8,9 @@ namespace ExpenseVista.API.Models
         public string LastName { get; set; } = string.Empty;
         // public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // for external login
+        public string? ProviderName { get; set; }
+        public string? ProviderKey { get; set; }
 
         //navigation properties
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

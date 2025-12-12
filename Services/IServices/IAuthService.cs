@@ -8,6 +8,7 @@ namespace ExpenseVista.API.Services.IServices
     {
         Task<(bool Succeeded, List<string> Errors)> RegisterAsync(RegisterDTO registerDTO);
         Task<(TokenResponseDTO tokenResponse, ApplicationUserDTO applicationUserDTO)> LoginAsync(LoginDTO dto);
+        Task<(TokenResponseDTO tokenResponse, ApplicationUserDTO applicationUserDTO)> GoogleLoginAsync(GoogleLoginRequestDTO dto);
         Task<TokenResponseDTO> RefreshTokenAsync(string refreshTokenRaw);
         Task LogoutAsync(string userId);
         Task SendVerificationAsync(ApplicationUser user);

@@ -4,12 +4,15 @@ using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Auth;
 using ExpenseVista.API.Models;
 using ExpenseVista.API.Services.IServices;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ExpenseVista.API.Services
 {
@@ -22,6 +25,7 @@ namespace ExpenseVista.API.Services
         private readonly ILookupNormalizer normalizer;
         private readonly ILogger<AuthService> logger;
         private readonly IConfiguration configuration;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly ApplicationDbContext dbContext;
         private readonly string frontendUrl;
 
@@ -34,6 +38,7 @@ namespace ExpenseVista.API.Services
             IOptions<AppSettings> appOptions,
             ILogger<AuthService> logger,
             IConfiguration configuration,
+            IHttpClientFactory httpClientFactory,
             ApplicationDbContext dbContext)
         {
             this.userManager = userManager;
@@ -43,9 +48,118 @@ namespace ExpenseVista.API.Services
             this.normalizer = normalizer;
             this.logger = logger;
             this.configuration = configuration;
+            this.httpClientFactory = httpClientFactory;
             this.dbContext = dbContext;
             frontendUrl = appOptions.Value.FrontendUrl;
         }
+
+        // --- PRIVATE HELPER METHODS ---
+
+        private async Task<ApplicationUser> FindOrCreateUserFromGooglePayloadAsync(GoogleJsonWebSignature.Payload payload)
+        {
+            // 1. Find user by Google ID (standard login)
+            var user = await userManager.Users.FirstOrDefaultAsync(u => u.ProviderName == "Google" && u.ProviderKey == payload.Subject);
+            if (user != null) return user;
+
+            // 2. Find user by email (account linking)
+            user = await userManager.FindByEmailAsync(payload.Email);
+            if (user != null)
+            {
+                // This is the linking step
+                user.ProviderName = "Google";
+                user.ProviderKey = payload.Subject;
+                user.EmailConfirmed = true;
+                await userManager.UpdateAsync(user);
+                return user;
+            }
+
+            // 3. Create a new user (first-time registration with Google)
+            user = new ApplicationUser
+            {
+                UserName = payload.Email,
+                Email = payload.Email,
+                FirstName = payload.GivenName ?? "",
+                LastName = payload.FamilyName ?? "",
+                EmailConfirmed = true, // Email is verified by Google
+                ProviderName = "Google",
+                ProviderKey = payload.Subject
+            };
+
+            var result = await userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            }
+
+            return user;
+        }
+
+        // NEW REFACTORED helper method for generating tokens
+        private async Task<TokenResponseDTO> GenerateAndPersistTokensAsync(ApplicationUser user)
+        {
+            var accessToken = jwtService.GenerateAccessToken(user, out DateTime accessExpiresAt);
+            var refreshTokenRaw = jwtService.GenerateRefreshTokenString();
+            var refreshHash = jwtService.HashToken(refreshTokenRaw);
+
+            var refreshDays = int.Parse(configuration["Jwt:RefreshTokenDurationInDays"] ?? "30");
+            var refreshExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
+
+            var refreshToken = new RefreshToken
+            {
+                TokenHash = refreshHash,
+                Expires = refreshExpiresAt,
+                Created = DateTime.UtcNow,
+                ApplicationUserId = user.Id
+            };
+
+            dbContext.RefreshTokens.Add(refreshToken);
+            await dbContext.SaveChangesAsync();
+
+            return new TokenResponseDTO
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshTokenRaw,
+                AccessTokenExpiresAt = accessExpiresAt,
+                RefreshTokenExpiresAt = refreshExpiresAt
+            };
+        }
+
+        private async Task<GoogleTokenResponse> ExchangeCodeForTokensAsync(string code)
+        {
+            var clientId = configuration["Google:ClientId"];
+            var clientSecret = configuration["Google:ClientSecret"];
+            // This must be the SAME URI you registered in Google Cloud Console
+            var redirectUri = "http://localhost:5000/auth/google/callback";
+
+            var tokenRequest = new
+            {
+                code,
+                client_id = clientId,
+                client_secret = clientSecret,
+                redirect_uri = redirectUri,
+                grant_type = "authorization_code"
+            };
+
+            var client = httpClientFactory.CreateClient();
+            var response = await client.PostAsJsonAsync("https://oauth2.googleapis.com/token", tokenRequest);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new ApplicationException($"Google token exchange failed: {errorContent}");
+            }
+
+            var tokens = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>();
+            return tokens ?? throw new ApplicationException("Failed to deserialize Google token response.");
+        }
+
+        // Private record to hold Google's response
+        private record GoogleTokenResponse(
+            [property: JsonPropertyName("access_token")] string AccessToken,
+            [property: JsonPropertyName("id_token")] string IdToken
+        );
+
+        // --- PUBLIC SERVICE METHODS --
 
         public async Task<(bool Succeeded, List<string> Errors)> RegisterAsync(RegisterDTO registerDTO)
         {
@@ -84,7 +198,7 @@ namespace ExpenseVista.API.Services
         public async Task<(TokenResponseDTO tokenResponse, ApplicationUserDTO applicationUserDTO)> LoginAsync(LoginDTO dto)
         {
             var user = await userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
+            if (user == null || !await userManager.CheckPasswordAsync(user, dto.Password))
             {
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
@@ -94,41 +208,9 @@ namespace ExpenseVista.API.Services
                 throw new UnauthorizedAccessException("EMAIL_NOT_CONFIRMED");
             }
 
-            var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
-            if (!result.Succeeded)
-            {
-                throw new UnauthorizedAccessException("Invalid credentials.");
-            }
-            // Success: Generate Token 
-            var accessToken = jwtService.GenerateAccessToken(user, out DateTime accessExpiresAt);
 
-            // Generate refresh token string (raw) and hash for DB
-            var refreshTokenRaw = jwtService.GenerateRefreshTokenString();
-            var refreshHash = jwtService.HashToken(refreshTokenRaw);
+            var tokenResponse = await GenerateAndPersistTokensAsync(user);
 
-            // Decide refresh expiry from configuration (days)
-            var refreshDays = int.Parse(configuration["Jwt:RefreshTokenDurationInDays"] ?? "30");
-            var refreshExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
-
-            // Persist refresh token
-            var refreshToken = new RefreshToken
-            {
-                TokenHash = refreshHash,
-                Expires = refreshExpiresAt,
-                Created = DateTime.UtcNow,
-                ApplicationUserId = user.Id
-            };
-
-            dbContext.RefreshTokens.Add(refreshToken);
-            await dbContext.SaveChangesAsync();
-
-            var tokenResponse = new TokenResponseDTO
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshTokenRaw,
-                AccessTokenExpiresAt = accessExpiresAt,
-                RefreshTokenExpiresAt = refreshExpiresAt
-            };
 
             var applicationUserDTO = new ApplicationUserDTO
             {
@@ -141,6 +223,32 @@ namespace ExpenseVista.API.Services
             return (tokenResponse, applicationUserDTO);
         }
 
+        public async Task<(TokenResponseDTO tokenResponse, ApplicationUserDTO applicationUserDTO)> GoogleLoginAsync(GoogleLoginRequestDTO dto)
+        {
+            // 1. Exchange the Authorization Code for Google's tokens
+            var googleTokens = await ExchangeCodeForTokensAsync(dto.AuthorizationCode);
+
+            // 2. Validate Google's ID token and get user info
+            var payload = await GoogleJsonWebSignature.ValidateAsync(googleTokens.IdToken);
+
+            // 3. Find or Create the user in your database (with account linking)
+            var user = await FindOrCreateUserFromGooglePayloadAsync(payload);
+
+            // 4. Generate YOUR OWN JWTs for the user
+            var tokenResponse = await GenerateAndPersistTokensAsync(user);
+
+            var applicationUserDTO = new ApplicationUserDTO
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email!,
+            };
+
+            return (tokenResponse, applicationUserDTO);
+        }
+
+        
         public async Task<TokenResponseDTO> RefreshTokenAsync(string refreshTokenRaw)
         {
             // Hash the provided refresh token and find in DB
@@ -241,8 +349,9 @@ namespace ExpenseVista.API.Services
         {
             var user = await userManager.FindByEmailAsync(dto.Email);
             if (user == null)
+            {
                 throw new BadRequestException("Invalid or expired token.");
-
+            }
 
             var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(dto.Token));
 

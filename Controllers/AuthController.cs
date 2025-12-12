@@ -4,6 +4,7 @@ using ExpenseVista.API.Models;
 using ExpenseVista.API.Services;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -38,6 +39,20 @@ namespace ExpenseVista.API.Controllers
             this.logger = logger;
         }
 
+        private void SetRefreshTokenCookie(TokenResponseDTO tokenResponse)
+        {
+            // CRITICAL: If SameSite is None, Secure MUST be true.
+            // Even on localhost, if you are doing Cross-Origin (Port 5000 to 7000), use this.
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = tokenResponse.RefreshTokenExpiresAt,
+            };
+            Response.Cookies.Append("refreshToken", tokenResponse.RefreshToken, cookieOptions);
+        }
+
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -63,16 +78,8 @@ namespace ExpenseVista.API.Controllers
 
             // Success: Return 200 OK with the token and user data
             logger.LogInformation("login succeeded");
-            // CRITICAL: If SameSite is None, Secure MUST be true.
-            // Even on localhost, if you are doing Cross-Origin (Port 5000 to 7000), use this.
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,  
-                SameSite = SameSiteMode.None,
-                Expires = result.tokenResponse.RefreshTokenExpiresAt ,
-            };
-            Response.Cookies.Append("refreshToken", result.tokenResponse.RefreshToken, cookieOptions);
+
+            SetRefreshTokenCookie(result.tokenResponse);
             //return only access token and user info to frontend
             return Ok(new 
             { 
@@ -80,6 +87,22 @@ namespace ExpenseVista.API.Controllers
                 user = result.applicationUserDTO
             });
 
+        }
+
+        [HttpPost("google-login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDTO request)
+        {
+            var result = await authService.GoogleLoginAsync(request);
+
+            // This logic is identical to your email login, we can centralize it
+            SetRefreshTokenCookie(result.tokenResponse);
+
+            return Ok(new
+            {
+                token = new { accessToken = result.tokenResponse.AccessToken },
+                user = result.applicationUserDTO
+            });
         }
 
         [HttpPost("refresh")]
@@ -95,21 +118,12 @@ namespace ExpenseVista.API.Controllers
                 return Unauthorized("No refresh token provided");
             }
             // 2. Call the updated service (passing only the string)
-            var result = await authService.RefreshTokenAsync(refreshToken);
+            var tokenResponse = await authService.RefreshTokenAsync(refreshToken);
 
             // 3. Set the NEW cookie (Rotation)
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = result.RefreshTokenExpiresAt
-            };
-
-            Response.Cookies.Append("refreshToken", result.RefreshToken, cookieOptions);
-
+            SetRefreshTokenCookie(tokenResponse);
             // 4. Return the new Access Token
-            return Ok(new { accessToken = result.AccessToken });
+            return Ok(new { accessToken = tokenResponse.AccessToken });
         }
 
         [HttpPost("logout")]
