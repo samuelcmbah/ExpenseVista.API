@@ -37,6 +37,7 @@ The API provides a comprehensive and secure RESTful interface for all applicatio
 | :--- | :--- | :--- | :--- |
 | **Authentication** | `/api/auth/register` | `POST` | Register a new user account. |
 | | `/api/auth/login` | `POST` | Authenticate a user and receive JWT access/refresh tokens. |
+| | `/api/auth/google-login` | `POST` | Authenticate a user via Google's OAuth 2.0 flow using an authorization code. |
 | | `/api/auth/refresh` | `POST` | Use a valid refresh token to get a new access token. |
 | | `/api/auth/logout` | `POST` | Invalidate the user's refresh token to log them out securely. |
 | | `/api/auth/confirm-email` | `POST` | Confirm a user's email address using a provided token. |
@@ -69,7 +70,7 @@ The API provides a comprehensive and secure RESTful interface for all applicatio
 
 To ensure a secure and clean API contract, the system uses Data Transfer Objects (DTOs) for all client communication. This decouples the API's public shape from the internal database models. Key DTOs include:
 
-*   **Auth:** `RegisterDTO`, `LoginDTO`, `ForgotPasswordDTO`, `ResetPasswordDTO`, `VerifyEmailDTO`
+*   **Auth:** `AppicationUserDTO`, `GoogleLoginRequestDTO`, `RefreshRequestDTO`, `TokenResponseDTO`, `RegisterDTO`, `LoginDTO`, `ForgotPasswordDTO`, `ResetPasswordDTO`, `VerifyEmailDTO`
 *   **Transactions:** `TransactionCreateDTO`, `TransactionUpdateDTO`, `TransactionDTO`, `TransactionDTOPagedResponse`
 *   **Budgets:** `BudgetCreateDTO`, `BudgetUpdateDTO`, `BudgetDTO`, `BudgetStatusDTO`, `BudgetProgressDTO`
 *   **Categories:** `CreateCategoryDTO`, `UpdateCategoryDTO`, `CategoryDTO`
@@ -114,6 +115,21 @@ The API implements a secure, stateful **JWT (JSON Web Token)** implementation wi
 *   **Refresh Tokens:** Long-lived tokens stored securely in **HttpOnly cookies** (inaccessible to client-side JavaScript) and persisted in the database.
 *   **Token Rotation:** The `/auth/refresh` endpoint invalidates the old Refresh Token and issues a new pair, providing maximum security against token hijacking and replay attacks.
 
+#### External Authentication (Google OAuth 2.0)
+
+To provide a modern and seamless user experience, the API supports external authentication using Google's OAuth 2.0 and OpenID Connect (OIDC) protocols.
+
+**The Authentication Flow:**
+
+1.  **Frontend Initiates:** The React client redirects the user to Google's consent screen.
+2.  **Authorization Code:** After user consent, Google redirects back to the frontend with a single-use **Authorization Code**.
+3.  **Backend Token Exchange:** The frontend sends this code to the `/api/auth/google-login` endpoint. The backend then performs a secure, **server-to-server** request to Google, exchanging the code and its `client_secret` for an `id_token`.
+4.  **Identity & Account Linking:** The backend validates the `id_token` from Google and performs smart account provisioning:
+    *   **Login:** If a user with the unique Google ID exists, they are logged in.
+    *   **Link:** If a user with the same verified email exists but has no Google link, the provider details are automatically linked to the existing account to prevent duplicates.
+    *   **Register:** If no user is found, a new account is created.
+5.  **Session Unification:** In all cases, the API generates its **own** JWT Access and Refresh Tokens for the user. This unifies the session management, meaning a Google-authenticated user is treated identically to a password-based user by the rest of the API.
+
 ---
 
 ## 📁 Project Structure
@@ -136,6 +152,7 @@ ExpenseVista.API/
 ### Prerequisites
 *   [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 *   [PostgreSQL](https://www.postgresql.org/download/) Server
+*   A code editor like [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/).
 
 ### Installation & Setup
 
@@ -145,7 +162,14 @@ ExpenseVista.API/
     cd ExpenseVista.API
     ```
 
-2.  **Configure Environment Variables for Local Development:**
+2. **Set up Google Authentication (Required)**
+     * Navigate to the Google Cloud Console.
+     * Create a new project and go to "APIs & Services" > "Credentials".
+     * Click "Create Credentials" > "OAuth client ID", select "Web application".
+     *Under "Authorized redirect URIs", add your frontend's callback URL (e.g., http://localhost:5000/auth/google/callback).
+     * Click "Create" and copy the Client ID and Client Secret.
+
+3.  **Configure Environment Variables for Local Development:**
     In the root of the `ExpenseVista.API` project, create a new file named `appsettings.Development.json`.
 
     Copy the following JSON structure into the file and replace the placeholder values with your local configuration details.
@@ -162,19 +186,23 @@ ExpenseVista.API/
       },
       "ResendEmailSettings": {
         "ApiKey": "re_your_resend_api_key"
+      },
+      "Google": {
+        "ClientId": "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE",
+        "ClientSecret": "PASTE_YOUR_GOOGLE_CLIENT_SECRET_HERE"
       }
     }
     ```
     *Note: The `.gitignore` file is configured to ignore `appsettings.Development.json`, so your local secrets will not be committed to the repository.*
 
-3.  **Apply Database Migrations:**
+4.  **Apply Database Migrations:**
     Ensure your PostgreSQL server is running, then execute the following commands in the terminal:
     ```bash
     dotnet restore
     dotnet ef database update
     ```
 
-4.  **Run the Application:**
+5.  **Run the Application:**
     ```bash
     dotnet run
     ```
