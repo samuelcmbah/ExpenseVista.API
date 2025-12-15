@@ -222,7 +222,7 @@ The API is continuously deployed to **Render** from the `main` branch.
   ## 🗺️ Roadmap
 
 This project is actively maintained. Future enhancements include:
-*   [ ] Implementing export of financial data (PDF/CSV).
+*   [ ] Implementing export of financial data (Excel/PDF).
 *   [ ] Adding third-party payment integration 
 *   [ ] Introducing unit and integration tests to improve code coverage.
 
