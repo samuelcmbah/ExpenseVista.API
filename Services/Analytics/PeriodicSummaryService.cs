@@ -7,7 +7,7 @@ using ExpenseVista.API.Models.Enums;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExpenseVista.API.Services
+namespace ExpenseVista.API.Services.Analytics
 {
     public class PeriodicSummaryService : IPeriodicSummaryService
     {
@@ -34,6 +34,7 @@ namespace ExpenseVista.API.Services
 
                 case "Last Month":
                     startDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+                    // End on the 1st of the current month (exclusive end date)
                     endDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
@@ -47,6 +48,13 @@ namespace ExpenseVista.API.Services
 
                 case "This Year":
                     startDate = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    break;
+
+                case "Last Year":
+                    // Start: January 1st of the previous year
+                    startDate = new DateTime(now.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    // End: January 1st of the current year (exclusive end date)
+                    endDate = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
                 default:

@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ExpenseVista.API.Services
+namespace ExpenseVista.API.Services.Auth
 {
     public class JwtService
     {

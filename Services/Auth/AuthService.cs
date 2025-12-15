@@ -14,7 +14,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace ExpenseVista.API.Services
+namespace ExpenseVista.API.Services.Auth
 {
     public class AuthService : IAuthService
     {

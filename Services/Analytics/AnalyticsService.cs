@@ -1,12 +1,11 @@
 ﻿using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Analytics;
-using ExpenseVista.API.DTOs.Analytics.Exports;
 using ExpenseVista.API.DTOs.Transaction;
 using ExpenseVista.API.Models.Enums;
 using ExpenseVista.API.Services.IServices;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExpenseVista.API.Services
+namespace ExpenseVista.API.Services.Analytics
 {
     public class AnalyticsService : IAnalyticsService
     {
@@ -31,7 +30,7 @@ namespace ExpenseVista.API.Services
 
             decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
             decimal percentage = totalBudget > 0
-                ? Math.Round((totalExpenses / totalBudget) * 100, 2)
+                ? Math.Round(totalExpenses / totalBudget * 100, 2)
                 : 0;
 
             return new BudgetProgressDTO
@@ -53,7 +52,7 @@ namespace ExpenseVista.API.Services
                     Name = g.Key,
                     Value = g.Sum(x => x.ConvertedAmount),
                     Percentage = totalExpenses > 0
-                        ? Math.Round((g.Sum(x => x.ConvertedAmount) / totalExpenses) * 100, 2)
+                        ? Math.Round(g.Sum(x => x.ConvertedAmount) / totalExpenses * 100, 2)
                         : 0
                 })
                 .ToList();
@@ -129,59 +128,6 @@ namespace ExpenseVista.API.Services
                 IncomeVsExpenses = analytics.IncomeVsExpenses,
                 FinancialTrend = analytics.FinancialTrend,
                 keyInsights = analytics.KeyInsights
-            };
-        }
-
-        public static FinancialReportExport MapToExport(FinancialDataDTO source)
-        {
-            return new FinancialReportExport
-            {
-                TimePeriod = source.TimePeriod,
-
-                Overview = new ReportOverviewExport
-                {
-                    TotalIncome = source.Summary.TotalIncome,
-                    TotalExpenses = source.Summary.TotalExpenses,
-                    NetBalance = source.Summary.NetBalance,
-
-                    BudgetTotal = source.BudgetProgress.Total,
-                    BudgetUsedPercentage = source.BudgetProgress.Percentage,
-                    BudgetBalance = source.Summary.BudgetBalance,
-
-                    TopSpendingCategory = source.keyInsights.TopSpendingCategory,
-                    TopSpendingAmount = source.keyInsights.TopSpendingAmount,
-
-                    TotalTransactions = source.keyInsights.TotalTransactions,
-                    IncomeTransactions = source.keyInsights.TotalIncomeTransactions,
-                    ExpenseTransactions = source.keyInsights.TotalExpenseTransactions
-                },
-
-                CategorySpending = source.SpendingByCategory
-                    .Select(c => new CategorySpendingExport
-                    {
-                        Category = c.Name,
-                        AmountSpent = c.Value,
-                        Percentage = c.Percentage
-                    })
-                    .ToList(),
-
-                MonthlyIncomeVsExpenses = source.IncomeVsExpenses
-                    .Select(m => new MonthlyIncomeExpenseExport
-                    {
-                        Month = m.Month,
-                        Income = m.Income,
-                        Expenses = m.Expenses
-                    })
-                    .ToList(),
-
-                FinancialTrends = source.FinancialTrend
-                    .Select(m => new MonthlyIncomeExpenseExport
-                    {
-                        Month = m.Month,
-                        Income = m.Income,
-                        Expenses = m.Expenses
-                    })
-                    .ToList()
             };
         }
 
