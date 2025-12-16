@@ -7,9 +7,9 @@
         public decimal TotalExpenses { get; init; }
         public decimal NetBalance { get; init; }
 
-        public decimal BudgetTotal { get; init; }
-        public decimal BudgetUsedPercentage { get; init; }
-        public decimal BudgetBalance { get; init; }
+        //public decimal BudgetTotal { get; init; }
+        //public decimal BudgetUsedPercentage { get; init; }
+        //public decimal BudgetBalance { get; init; }
 
         public string TopSpendingCategory { get; init; } = string.Empty;
         public decimal TopSpendingAmount { get; init; }

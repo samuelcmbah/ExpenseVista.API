@@ -1,4 +1,6 @@
-﻿namespace ExpenseVista.API.DTOs.Analytics
+﻿using ExpenseVista.API.DTOs.Transaction;
+
+namespace ExpenseVista.API.DTOs.Analytics
 {
     public class FinancialDataDTO
     {
@@ -9,5 +11,9 @@
         public List<IncomeExpenseDataDTO> IncomeVsExpenses { get; set; } = new();
         public List<IncomeExpenseDataDTO> FinancialTrend { get; set; } = new();
         public KeyInsightsDTO keyInsights { get; set; } = new();
+
+        //new property for file exports
+        public List<TransactionDTO> Transactions { get; init; } = [];
+        public List<MonthlyBudgetDetailDTO> MonthlyBudgets { get; init; } = [];
     }
 }

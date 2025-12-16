@@ -2,6 +2,6 @@
 {
     public class ExportRequestDto
     {
-        public string Period { get; set; } = string.Empty;
+        public string Period { get; set; } = "This Month";
     }
 }

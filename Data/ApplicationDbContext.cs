@@ -58,5 +58,12 @@ namespace ExpenseVista.API.Data
                 .IsUnique();
 
         }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            // This convention will be applied to all DateTime properties in models
+            configurationBuilder.Properties<DateTime>()
+                .HaveConversion<UtcDateTimeConverter>();
+        }
     }
 }

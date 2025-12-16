@@ -28,16 +28,16 @@ namespace ExpenseVista.API.Services.Analytics
                     b.BudgetMonth < endDate)
                 .ToListAsync();
 
-            decimal totalBudget = budgets.Sum(b => b.MonthlyLimit);
-            decimal percentage = totalBudget > 0
-                ? Math.Round(totalExpenses / totalBudget * 100, 2)
+            var totalBudget = budgets.Sum(b => b.MonthlyLimit);
+            var percentage = totalBudget > 0
+                ? (totalExpenses / totalBudget)
                 : 0;
 
             return new BudgetProgressDTO
             {
                 Spent = totalExpenses,
-                Total = totalBudget,
-                Percentage = percentage
+                Total = totalBudget ?? 0m,
+                Percentage = percentage ?? 0m
             };
         }
 
@@ -52,7 +52,7 @@ namespace ExpenseVista.API.Services.Analytics
                     Name = g.Key,
                     Value = g.Sum(x => x.ConvertedAmount),
                     Percentage = totalExpenses > 0
-                        ? Math.Round(g.Sum(x => x.ConvertedAmount) / totalExpenses * 100, 2)
+                        ? g.Sum(x => x.ConvertedAmount) / totalExpenses
                         : 0
                 })
                 .ToList();
@@ -98,13 +98,46 @@ namespace ExpenseVista.API.Services.Analytics
             };
         }
 
+        private async Task<List<MonthlyBudgetDetailDTO>> GetMonthlyBudgetDetailsAsync(string userId, DateTime startDate, DateTime endDate, List<TransactionDTO> transactions)
+        {
+            // 1. Get all relevant budgets in one call
+            var budgets = await context.Budgets
+                .Where(b => b.ApplicationUserId == userId && b.BudgetMonth >= startDate && b.BudgetMonth < endDate)
+                .ToDictionaryAsync(b => b.BudgetMonth.ToString("MMM yyyy")); // Key by "Month Year" string
+
+            // 2. Group expenses by month
+            var monthlyExpenses = transactions
+                .Where(t => t.Type == TransactionType.Expense)
+                .GroupBy(t => t.TransactionDate.ToString("MMM yyyy"))
+                .ToDictionary(g => g.Key, g => g.Sum(t => t.ConvertedAmount));
+
+            // 3. Create a list of all unique months from both budgets and expenses
+            var allMonths = budgets.Keys.Union(monthlyExpenses.Keys).Distinct();
+
+            var budgetDetails = new List<MonthlyBudgetDetailDTO>();
+
+            // 4. Build the detailed list
+            foreach (var monthKey in allMonths.OrderBy(m => DateTime.ParseExact(m, "MMM yyyy", null)))
+            {
+                budgets.TryGetValue(monthKey, out var budget);
+                monthlyExpenses.TryGetValue(monthKey, out var spent);
+
+                budgetDetails.Add(new MonthlyBudgetDetailDTO
+                {
+                    Month = monthKey,
+                    BudgetAmount = budget?.MonthlyLimit, // Null if no budget found
+                    AmountSpent = spent
+                });
+            }
+
+            return budgetDetails;
+        }
 
         public async Task<FinancialDataDTO> GetAnalyticsAsync(string period, string userId)
         {
             var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId, period);
 
-            var budgetProgress = await GetBudgetProgressAsync(userId, summary.StartDate, summary.EndDate, summary.TotalExpenses);
-            if (summary.Transactions == null)
+            if (summary.Transactions == null || !summary.Transactions.Any())
             {
                 return new FinancialDataDTO
                 {
@@ -114,10 +147,15 @@ namespace ExpenseVista.API.Services.Analytics
                     SpendingByCategory = new List<SpendingCategoryDTO>(),
                     IncomeVsExpenses = new List<IncomeExpenseDataDTO>(),
                     FinancialTrend = new List<IncomeExpenseDataDTO>(),
-                    keyInsights = new KeyInsightsDTO()
+                    keyInsights = new KeyInsightsDTO(),
+                    Transactions = new List<TransactionDTO>() /// for mapping to exports
                 };
             }
-            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses, budgetProgress.Total);
+            var budgetProgress = await GetBudgetProgressAsync(userId, summary.StartDate, summary.EndDate, summary.TotalExpenses);
+            var monthlyBudgets = await GetMonthlyBudgetDetailsAsync(userId, summary.StartDate, summary.EndDate, summary.Transactions);
+            decimal totalBudget = monthlyBudgets.Sum(b => b.BudgetAmount ?? 0);
+
+            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses, totalBudget);
 
             return new FinancialDataDTO
             {
@@ -127,7 +165,9 @@ namespace ExpenseVista.API.Services.Analytics
                 SpendingByCategory = analytics.SpendingByCategory,
                 IncomeVsExpenses = analytics.IncomeVsExpenses,
                 FinancialTrend = analytics.FinancialTrend,
-                keyInsights = analytics.KeyInsights
+                keyInsights = analytics.KeyInsights,
+                Transactions = summary.Transactions, // for mapping to exports
+                MonthlyBudgets = monthlyBudgets
             };
         }
 

@@ -6,7 +6,9 @@
         public ReportOverviewExport Overview { get; init; } = new();
         public IReadOnlyList<CategorySpendingExport> CategorySpending { get; init; } = [];
         public IReadOnlyList<MonthlyIncomeExpenseExport> MonthlyIncomeVsExpenses { get; init; } = [];
-        public IReadOnlyList<MonthlyIncomeExpenseExport> FinancialTrends { get; init; } = [];
+        public IReadOnlyList<TransactionExport> Transactions { get; init; } = [];
+        public IReadOnlyList<MonthlyBudgetExport> BudgetBreakdown { get; init; } = [];
+
     }
 
 }

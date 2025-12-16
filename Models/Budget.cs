@@ -12,7 +12,7 @@ namespace ExpenseVista.API.Models
         // The maximum amount the user intends to spend/save within the period
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal MonthlyLimit { get; set; }
+        public decimal? MonthlyLimit { get; set; }
 
 
         /// <summary>

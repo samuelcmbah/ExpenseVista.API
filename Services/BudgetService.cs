@@ -60,17 +60,17 @@ namespace ExpenseVista.API.Services
                     PercentageUsed = 0
                 };
             }
-
+            decimal limit = budget.MonthlyLimit ?? 0m;
             return new BudgetStatusDTO
             {
                 Id = budget.Id,
                 BudgetSet = true,
                 BudgetMonth = budget.BudgetMonth,
-                MonthlyLimit = budget.MonthlyLimit,
-                RemainingAmount = budget.MonthlyLimit - summary.TotalExpenses,
-                OverSpent = Math.Abs(budget.MonthlyLimit - summary.TotalExpenses),
-                PercentageUsed = budget.MonthlyLimit > 0
-                    ? Math.Round((summary.TotalExpenses / budget.MonthlyLimit) * 100, 2)
+                MonthlyLimit = limit,
+                RemainingAmount = limit - summary.TotalExpenses,
+                OverSpent = Math.Abs(limit - summary.TotalExpenses),
+                PercentageUsed = limit > 0
+                    ? (summary.TotalExpenses / limit) 
                     : 0
             };
         }
@@ -88,15 +88,18 @@ namespace ExpenseVista.API.Services
 
         public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)
         {
-            // Generate the budget month in UTC (1st day of current month)
-            var budgetMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            // 1. Normalize the incoming date to a consistent, UTC-based start of the month.
+            var budgetMonthUtc = new DateTime(
+                budgetCreateDTO.BudgetMonth.Year,
+                budgetCreateDTO.BudgetMonth.Month,
+                1, 0, 0, 0, DateTimeKind.Utc);
 
             // Check if a budget already exists for this month
             var existingBudget = await context.Budgets
                 .FirstOrDefaultAsync(b =>
                     b.ApplicationUserId == userId &&
-                    b.BudgetMonth.Year == budgetMonth.Year &&
-                    b.BudgetMonth.Month == budgetMonth.Month);
+                    b.BudgetMonth.Year == budgetMonthUtc.Year &&
+                    b.BudgetMonth.Month == budgetMonthUtc.Month);
 
             if (existingBudget != null)
             {
@@ -106,7 +109,7 @@ namespace ExpenseVista.API.Services
             // Map DTO to entity, ignoring any BudgetMonth sent from frontend
             var budget = mapper.Map<Budget>(budgetCreateDTO)!;
             budget.ApplicationUserId = userId;
-            budget.BudgetMonth = budgetMonth; // set UTC month
+            budget.BudgetMonth = budgetMonthUtc; 
 
             await context.AddAsync(budget);
             await context.SaveChangesAsync();

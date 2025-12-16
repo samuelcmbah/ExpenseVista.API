@@ -21,7 +21,7 @@ namespace ExpenseVista.API.Services.Analytics
         }
         public async Task<PeriodicSummaryDTO> GetPeriodicSummaryAsync(string userId, string period = "This Month")
         {
-            DateTime now = DateTime.UtcNow; // always use UTC
+            DateTime now = DateTime.UtcNow;
 
             DateTime startDate;
             DateTime endDate = now;
@@ -34,16 +34,21 @@ namespace ExpenseVista.API.Services.Analytics
 
                 case "Last Month":
                     startDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
-                    // End on the 1st of the current month (exclusive end date)
                     endDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
                 case "Last 3 Months":
-                    startDate = now.AddMonths(-3);
+                    // First, get the date 3 months ago
+                    var roughStartDate3M = now.AddMonths(-3);
+                    // Then, anchor it to the first day of that month
+                    startDate = new DateTime(roughStartDate3M.Year, roughStartDate3M.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
                 case "Last 6 Months":
-                    startDate = now.AddMonths(-6);
+                    // First, get the date 6 months ago
+                    var roughStartDate6M = now.AddMonths(-6);
+                    // Then, anchor it to the first day of that month
+                    startDate = new DateTime(roughStartDate6M.Year, roughStartDate6M.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
                 case "This Year":
@@ -51,20 +56,17 @@ namespace ExpenseVista.API.Services.Analytics
                     break;
 
                 case "Last Year":
-                    // Start: January 1st of the previous year
                     startDate = new DateTime(now.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    // End: January 1st of the current year (exclusive end date)
                     endDate = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
 
                 default:
-                    startDate = now.AddMonths(-1);
+                    // Defaulting to "Last Month" is safer and more consistent
+                    startDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+                    endDate = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     break;
             }
 
-            // Make sure all dates are UTC
-            startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
-            endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
 
             var transactions = await context.Transactions
                 .Include(t => t.Category)
@@ -91,6 +93,5 @@ namespace ExpenseVista.API.Services.Analytics
                 TotalExpenses = expenses
             };
         }
-
     }
 }

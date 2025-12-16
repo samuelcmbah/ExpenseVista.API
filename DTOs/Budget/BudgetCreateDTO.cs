@@ -6,7 +6,7 @@ namespace ExpenseVista.API.DTOs.Budget
     {
         [Required]
         [Range(0.0, double.MaxValue, ErrorMessage = "Monthly limit must be zero or positive.")]
-        public decimal MonthlyLimit { get; set; }
+        public decimal? MonthlyLimit { get; set; }
 
         // The client provides the month/year for the budget
         [Required]
