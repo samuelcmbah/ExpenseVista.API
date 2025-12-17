@@ -236,20 +236,8 @@ namespace ExpenseVista.API.Services.Exports
                 return;
             }
 
-            // 1. Manually write the headers.
-            ws.Cell("A1").Value = "Month";
-            ws.Cell("B1").Value = "Income";
-            ws.Cell("C1").Value = "Expenses";
-
-            // 2. Iterate and write the data row by row.
-            // ClosedXML is smart enough to handle the nullable decimal correctly.
-            ws.Cell("A2").InsertData(data);
-
-            // 3. Convert the range to a table *after* inserting the data.
-            var firstCell = ws.Cell("A1");
-            var lastCell = ws.LastCellUsed();
-            var range = ws.Range(firstCell, lastCell);
-            var table = range.CreateTable(); // This makes it an official Excel table
+            // This creates the table and headers automatically from your DTO properties.
+            var table = ws.Cell(1, 1).InsertTable(data);
             table.Theme = XLTableTheme.TableStyleLight8;
             ApplyCustomHeaderStyle(table);
 
