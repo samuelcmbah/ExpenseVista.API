@@ -1,34 +1,52 @@
 ﻿using ClosedXML.Excel;
 using ExpenseVista.API.DTOs.Analytics.Exports;
 using ExpenseVista.API.Services.IServices;
+using System.Globalization;
 
 namespace ExpenseVista.API.Services.Exports
 {
     public class FinancialReportExcelExporter : IFinancialReportExporter
     {
 
-        private const string NairaFormat = "₦ #,##0.00";
+        private const string NairaFormat = "\"₦\"#,##0.00";
         private const double CurrencyColumnWidth = 18;
         private static readonly XLColor AccentColor = XLColor.SeaGreen;
 
         //PUBLIC ACCESS METHOD
         public byte[] Export(FinancialReportExport report)
         {
-            //create a workbook and add all the sheets using separate private methods
-            using var workbook = new XLWorkbook();
+            var originalCulture = CultureInfo.CurrentCulture;
+            var originalUICulture = CultureInfo.CurrentUICulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 
-            workbook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                //create a workbook and add all the sheets using separate private methods
+                using var workbook = new XLWorkbook();
+                workbook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            AddOverviewSheet(workbook, report);
-            AddBudgetBreakdownSheet(workbook, report.BudgetBreakdown);
-            AddCategorySpendingSheet(workbook, report.CategorySpending);
-            AddIncomeVsExpensesSheet(workbook, report.MonthlyIncomeVsExpenses);
-            AddTransactionsSheet(workbook, report.Transactions);
+                AddOverviewSheet(workbook, report);
+                AddBudgetBreakdownSheet(workbook, report.BudgetBreakdown);
+                AddCategorySpendingSheet(workbook, report.CategorySpending);
+                AddIncomeVsExpensesSheet(workbook, report.MonthlyIncomeVsExpenses);
+                AddTransactionsSheet(workbook, report.Transactions);
 
-            //SAVE the workbook to a stream and return the byte array, a standard format for returning files in controllers
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            return stream.ToArray();
+
+
+                //SAVE the workbook to a stream and return the byte array, a standard format for returning files in controllers
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                return stream.ToArray();
+            }
+            finally
+            {
+                // Always restore culture
+                CultureInfo.CurrentCulture = originalCulture;
+                CultureInfo.CurrentUICulture = originalUICulture;
+            }
+
+
         }
         //HELPER METHODS
         private static IXLCell WriteKeyValue(IXLWorksheet ws, ref int row, string label, object value, bool isCurrency = false, bool isPercentage = false)
