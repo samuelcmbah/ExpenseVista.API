@@ -15,12 +15,7 @@ namespace ExpenseVista.API.Services.Exports
         //PUBLIC ACCESS METHOD
         public byte[] Export(FinancialReportExport report)
         {
-            var originalCulture = CultureInfo.CurrentCulture;
-            var originalUICulture = CultureInfo.CurrentUICulture;
-            try
-            {
-                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-                CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+          
 
                 //create a workbook and add all the sheets using separate private methods
                 using var workbook = new XLWorkbook();
@@ -38,14 +33,7 @@ namespace ExpenseVista.API.Services.Exports
                 using var stream = new MemoryStream();
                 workbook.SaveAs(stream);
                 return stream.ToArray();
-            }
-            finally
-            {
-                // Always restore culture
-                CultureInfo.CurrentCulture = originalCulture;
-                CultureInfo.CurrentUICulture = originalUICulture;
-            }
-
+        
 
         }
         //HELPER METHODS
@@ -198,7 +186,7 @@ namespace ExpenseVista.API.Services.Exports
         private static void AddCategorySpendingSheet(XLWorkbook workbook, IReadOnlyList<CategorySpendingExport> data)
         {
             var ws = workbook.Worksheets.Add("Spending by Category");
-          
+
 
             // Insert the data as a table directly
             if (data.Any())
@@ -225,10 +213,11 @@ namespace ExpenseVista.API.Services.Exports
             {
                 // Handle the case with no data gracefully
                 ws.Cell("A1").Value = "No category spending data for this period.";
-                ws.Column("A").AdjustToContents(); 
+                ws.Column("A").AdjustToContents();
 
             }
         }
+
         private static void AddIncomeVsExpensesSheet(XLWorkbook workbook, IReadOnlyList<MonthlyIncomeExpenseExport> data)
         {
             var ws = workbook.Worksheets.Add("Income vs Expenses");
@@ -236,27 +225,42 @@ namespace ExpenseVista.API.Services.Exports
             if (!data.Any())
             {
                 ws.Cell("A1").Value = "No monthly data available for this period.";
-                ws.Columns().AdjustToContents();
+                ws.Column("A").AdjustToContents();
                 return;
             }
 
-            // This creates the table and headers automatically from your DTO properties.
-            var table = ws.Cell(1, 1).InsertTable(data);
-            table.Theme = XLTableTheme.TableStyleLight8;
+            // 1. Manually write the headers.
+            ws.Cell("A1").Value = "Month";
+            ws.Cell("B1").Value = "Income";
+            ws.Cell("C1").Value = "Expenses";
+
+            // 2. Loop through the data and set values explicitly.
+            //    SetValue() is a lower-level API that correctly handles numeric types.
+            var row = 2;
+            foreach (var item in data)
+            {
+                ws.Cell(row, 1).SetValue(item.Month);
+                ws.Cell(row, 2).SetValue(item.Income); // Explicitly sets the number
+                ws.Cell(row, 3).SetValue(item.Expenses); // Explicitly sets the number
+                row++;
+            }
+
+            // 3. create the table from the range just populated.
+            var range = ws.Range(ws.Cell("A1"), ws.Cell(row - 1, 3));
+            var table = range.CreateTable("IncomeVsExpensesTable");
+
+            table.Theme = XLTableTheme.TableStyleLight1;
             ApplyCustomHeaderStyle(table);
 
-            // Add totals row for a better user experience
             table.ShowTotalsRow = true;
             table.Field("Month").TotalsRowLabel = "Totals:";
             table.Field("Income").TotalsRowFunction = XLTotalsRowFunction.Sum;
             table.Field("Expenses").TotalsRowFunction = XLTotalsRowFunction.Sum;
 
-            // Apply the Naira format to the Income (B) and Expenses (C) columns
-            //ws.Columns("B:C").Style.NumberFormat.Format = NairaFormat;
-
+            ws.Columns("B:C").Style.NumberFormat.Format = NairaFormat;
             ws.SheetView.FreezeRows(1);
-            ws.Column("A").AdjustToContents(); // Adjust Month column
-            ws.Columns("B:C").Width = CurrencyColumnWidth; // Set fixed width for Income & Expenses
+            ws.Column("A").AdjustToContents();
+            ws.Columns("B:C").Width = CurrencyColumnWidth;
         }
         private static void AddTransactionsSheet(XLWorkbook workbook, IReadOnlyList<TransactionExport> data)
         {
