@@ -19,6 +19,9 @@ namespace ExpenseVista.API.Services.Exports
             var originalUICulture = CultureInfo.CurrentUICulture;
             try
             {
+                //switching cultures
+                CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 
                 //create a workbook and add all the sheets using separate private methods
                 using var workbook = new XLWorkbook();
