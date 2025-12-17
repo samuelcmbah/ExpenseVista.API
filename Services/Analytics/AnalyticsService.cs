@@ -18,29 +18,6 @@ namespace ExpenseVista.API.Services.Analytics
             this.periodicSummaryService = periodicSummaryService;
         }
 
-
-        private async Task<BudgetProgressDTO> GetBudgetProgressAsync(string userId, DateTime startDate, DateTime endDate, decimal totalExpenses)
-        {
-            var budgets = await context.Budgets
-                .Where(b => 
-                    b.ApplicationUserId == userId && 
-                    b.BudgetMonth >= startDate &&
-                    b.BudgetMonth < endDate)
-                .ToListAsync();
-
-            var totalBudget = budgets.Sum(b => b.MonthlyLimit);
-            var percentage = totalBudget > 0
-                ? (totalExpenses / totalBudget)
-                : 0;
-
-            return new BudgetProgressDTO
-            {
-                Spent = totalExpenses,
-                Total = totalBudget ?? 0m,
-                Percentage = percentage ?? 0m
-            };
-        }
-
         private FinancialTransactionAnalytics GetTransactionAnalytics(List<TransactionDTO> transactions, decimal totalIncome, decimal totalExpenses, decimal totalBudget)
         {
            
@@ -151,11 +128,22 @@ namespace ExpenseVista.API.Services.Analytics
                     Transactions = new List<TransactionDTO>() /// for mapping to exports
                 };
             }
-            var budgetProgress = await GetBudgetProgressAsync(userId, summary.StartDate, summary.EndDate, summary.TotalExpenses);
             var monthlyBudgets = await GetMonthlyBudgetDetailsAsync(userId, summary.StartDate, summary.EndDate, summary.Transactions);
-            decimal totalBudget = monthlyBudgets.Sum(b => b.BudgetAmount ?? 0);
 
-            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses, totalBudget);
+            decimal totalBudgetForPeriod = monthlyBudgets.Sum(b => b.BudgetAmount ?? 0);
+            decimal totalExpensesForPeriod = summary.TotalExpenses;
+            decimal percentage = totalBudgetForPeriod > 0
+                ? totalExpensesForPeriod / totalBudgetForPeriod 
+                : 0;
+
+            var budgetProgress = new BudgetProgressDTO
+            {
+                Total = totalBudgetForPeriod,
+                Spent = totalExpensesForPeriod,
+                Percentage = percentage
+            };
+
+            var analytics = GetTransactionAnalytics(summary.Transactions, summary.TotalIncome, summary.TotalExpenses, totalBudgetForPeriod);
 
             return new FinancialDataDTO
             {
@@ -167,7 +155,7 @@ namespace ExpenseVista.API.Services.Analytics
                 FinancialTrend = analytics.FinancialTrend,
                 keyInsights = analytics.KeyInsights,
                 Transactions = summary.Transactions, // for mapping to exports
-                MonthlyBudgets = monthlyBudgets
+                MonthlyBudgets = monthlyBudgets //for mapping to exports
             };
         }
 
