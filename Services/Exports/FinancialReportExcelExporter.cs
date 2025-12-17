@@ -9,6 +9,7 @@ namespace ExpenseVista.API.Services.Exports
 
         private const string NairaFormat = "₦ #,##0.00";
         private const double CurrencyColumnWidth = 18;
+        private static readonly XLColor AccentColor = XLColor.SeaGreen;
 
         //PUBLIC ACCESS METHOD
         public byte[] Export(FinancialReportExport report)
@@ -55,30 +56,44 @@ namespace ExpenseVista.API.Services.Exports
             return valueCell; // Return the cell so we can style it further
         }
 
+        private static void ApplyCustomHeaderStyle(IXLTable table)
+        {
+            // Set the background color to our defined accent green
+            table.HeadersRow().Style.Fill.SetBackgroundColor(AccentColor);
+
+            // Set the font color to white and make it bold for readability
+            table.HeadersRow().Style.Font.SetFontColor(XLColor.White);
+            table.HeadersRow().Style.Font.SetBold();
+        }
 
         private static void AddOverviewSheet(XLWorkbook workbook, FinancialReportExport report)
         {
             var ws = workbook.Worksheets.Add("Overview");
             ws.Column(1).Width = 25; // Give labels more space
-            ws.Column(2).Width = 20; // Give values space
+            ws.Column(2).Width = 25; // Give values space
 
             // -- Header --
             ws.Cell("A1").Value = "ExpenseVista Financial Report";
             ws.Cell("A1").Style.Font.SetBold();
             ws.Cell("A1").Style.Font.FontSize = 16;
+            ws.Cell("A1").Style.Font.FontColor = AccentColor; // Apply accent color
             ws.Range("A1:B1").Merge(); // Merge cells for a cleaner title
 
-            ws.Cell("A3").Value = "Time Period";
-            ws.Cell("A3").Style.Font.SetBold();
-            ws.Cell("B3").Value = report.TimePeriod;
+            // -- User and Date Info --
+            var row = 3;
+            WriteKeyValue(ws, ref row, "Report For", report.UserName);
+            WriteKeyValue(ws, ref row, "Email", report.UserEmail);
+            WriteKeyValue(ws, ref row, "Time Period", report.TimePeriod);
+            WriteKeyValue(ws, ref row, "Date", $"{report.StartDate:dd MMM yyyy} - {report.EndDate:dd MMM yyyy}");
 
-            var row = 5;
+            row++;
 
             // -- Financial Summary Section --
             ws.Cell(row, 1).Value = "Financial Summary";
             ws.Cell(row, 1).Style.Font.SetBold();
             ws.Cell(row, 1).Style.Font.FontSize = 12;
-            ws.Range(row, 1, row, 2).Merge().Style.Fill.SetBackgroundColor(XLColor.LightGray);
+            ws.Cell(row, 1).Style.Font.FontColor = XLColor.White; // White text
+            ws.Range(row, 1, row, 2).Merge().Style.Fill.SetBackgroundColor(AccentColor);
             row++;
 
             WriteKeyValue(ws, ref row, "Total Income", report.Overview.TotalIncome, isCurrency: true);
@@ -101,7 +116,8 @@ namespace ExpenseVista.API.Services.Exports
             ws.Cell(row, 1).Value = "Key Insights";
             ws.Cell(row, 1).Style.Font.SetBold();
             ws.Cell(row, 1).Style.Font.FontSize = 12;
-            ws.Range(row, 1, row, 2).Merge().Style.Fill.SetBackgroundColor(XLColor.LightGray);
+            ws.Cell(row, 1).Style.Font.FontColor = XLColor.White;
+            ws.Range(row, 1, row, 2).Merge().Style.Fill.SetBackgroundColor(AccentColor);
             row++;
 
             WriteKeyValue(ws, ref row, "Top Spending Category", report.Overview.TopSpendingCategory);
@@ -129,6 +145,8 @@ namespace ExpenseVista.API.Services.Exports
             ws.Cell(1, 3).Value = "Spent";
             ws.Cell(1, 4).Value = "Balance";
             ws.Range("A1:D1").Style.Font.SetBold();
+            ws.Range("A1:D1").Style.Font.FontColor = XLColor.White;
+            ws.Range("A1:D1").Style.Fill.SetBackgroundColor(AccentColor);
 
             var row = 2;
             foreach (var item in data)
@@ -168,8 +186,8 @@ namespace ExpenseVista.API.Services.Exports
             if (data.Any())
             {
                 var table = ws.Cell(1, 1).InsertTable(data);
-                // You can customize the table style and totals
-                table.Theme = XLTableTheme.TableStyleLight15;
+                table.Theme = XLTableTheme.TableStyleLight8;
+                ApplyCustomHeaderStyle(table);
                 table.ShowTotalsRow = true;
 
                 // Specify which columns get a total. "Sum" is the default.
@@ -193,7 +211,6 @@ namespace ExpenseVista.API.Services.Exports
 
             }
         }
-
         private static void AddIncomeVsExpensesSheet(XLWorkbook workbook, IReadOnlyList<MonthlyIncomeExpenseExport> data)
         {
             var ws = workbook.Worksheets.Add("Income vs Expenses");
@@ -207,7 +224,8 @@ namespace ExpenseVista.API.Services.Exports
 
             // This creates the table and headers automatically from your DTO properties.
             var table = ws.Cell(1, 1).InsertTable(data);
-            table.Theme = XLTableTheme.TableStyleLight15;
+            table.Theme = XLTableTheme.TableStyleLight8;
+            ApplyCustomHeaderStyle(table);
 
             // Add totals row for a better user experience
             table.ShowTotalsRow = true;
@@ -234,7 +252,8 @@ namespace ExpenseVista.API.Services.Exports
             }
 
             var table = ws.Cell(1, 1).InsertTable(data);
-            table.Theme = XLTableTheme.TableStyleLight15; // Optional: style the table
+            table.Theme = XLTableTheme.TableStyleLight8;
+            ApplyCustomHeaderStyle(table);
 
             //format and allow totals for specific columns
             table.ShowTotalsRow = true;
@@ -247,7 +266,8 @@ namespace ExpenseVista.API.Services.Exports
             ws.Columns("D:E").Style.NumberFormat.Format = NairaFormat;
 
             ws.SheetView.FreezeRows(1);
-            ws.Column("A").AdjustToContents(); // Adjust Date
+            ws.Column("A").AdjustToContents(); // Adjust Date.
+            ws.Column("B").Width = CurrencyColumnWidth;
             ws.Columns("C").AdjustToContents(); //  Category
             ws.Columns("D:E").Width = CurrencyColumnWidth;
         }

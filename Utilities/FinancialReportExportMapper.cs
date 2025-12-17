@@ -5,21 +5,21 @@ namespace ExpenseVista.API.Utilities
 {
     public static class FinancialReportExportMapper
     {
-        public static FinancialReportExport MapToExport(FinancialDataDTO source)
+        public static FinancialReportExport MapToExport(FinancialDataDTO source, string userName, string userEmail)
         {
             return new FinancialReportExport
             {
                 TimePeriod = source.TimePeriod,
+                UserName = userName,
+                UserEmail = userEmail,
+                StartDate = source.StartDate,
+                EndDate = source.EndDate,
 
                 Overview = new ReportOverviewExport
                 {
                     TotalIncome = source.Summary.TotalIncome,
                     TotalExpenses = source.Summary.TotalExpenses,
                     NetBalance = source.Summary.NetBalance,
-
-                    //BudgetTotal = source.BudgetProgress.Total,
-                    //BudgetUsedPercentage = source.BudgetProgress.Percentage,
-                    //BudgetBalance = source.Summary.BudgetBalance,
 
                     TopSpendingCategory = source.keyInsights.TopSpendingCategory,
                     TopSpendingAmount = source.keyInsights.TopSpendingAmount,

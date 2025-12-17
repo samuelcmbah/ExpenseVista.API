@@ -148,6 +148,8 @@ namespace ExpenseVista.API.Services.Analytics
             return new FinancialDataDTO
             {
                 TimePeriod = period,
+                StartDate = summary.StartDate,
+                EndDate = summary.EndDate,
                 Summary = analytics.Summary,
                 BudgetProgress = budgetProgress,
                 SpendingByCategory = analytics.SpendingByCategory,

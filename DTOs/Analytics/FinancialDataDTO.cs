@@ -5,6 +5,8 @@ namespace ExpenseVista.API.DTOs.Analytics
     public class FinancialDataDTO
     {
         public string TimePeriod { get; set; } = string.Empty;
+        public DateTime StartDate { get; init; }
+        public DateTime EndDate { get; init; }
         public SummaryDTO Summary { get; set; } = new();
         public BudgetProgressDTO BudgetProgress { get; set; } = new();
         public List<SpendingCategoryDTO> SpendingByCategory { get; set; } = new();
