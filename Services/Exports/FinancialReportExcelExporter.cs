@@ -15,7 +15,10 @@ namespace ExpenseVista.API.Services.Exports
         //PUBLIC ACCESS METHOD
         public byte[] Export(FinancialReportExport report)
         {
-          
+            var originalCulture = CultureInfo.CurrentCulture;
+            var originalUICulture = CultureInfo.CurrentUICulture;
+            try
+            {
 
                 //create a workbook and add all the sheets using separate private methods
                 using var workbook = new XLWorkbook();
@@ -33,7 +36,13 @@ namespace ExpenseVista.API.Services.Exports
                 using var stream = new MemoryStream();
                 workbook.SaveAs(stream);
                 return stream.ToArray();
-        
+            }
+            finally
+            {
+                //restore original culture
+                CultureInfo.CurrentCulture = originalCulture;
+                CultureInfo.CurrentUICulture = originalUICulture;
+            }
 
         }
         //HELPER METHODS
