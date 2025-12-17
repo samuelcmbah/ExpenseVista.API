@@ -8,7 +8,7 @@ namespace ExpenseVista.API.Services.Exports
     public class FinancialReportExcelExporter : IFinancialReportExporter
     {
 
-        private const string NairaFormat = "\"₦\"#,##0.00";
+        private const string NairaFormat = "₦ #,##0.00";
         private const double CurrencyColumnWidth = 18;
         private static readonly XLColor AccentColor = XLColor.SeaGreen;
 
@@ -24,6 +24,7 @@ namespace ExpenseVista.API.Services.Exports
 
                 //create a workbook and add all the sheets using separate private methods
                 using var workbook = new XLWorkbook();
+
                 workbook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                 AddOverviewSheet(workbook, report);
@@ -32,8 +33,6 @@ namespace ExpenseVista.API.Services.Exports
                 AddIncomeVsExpensesSheet(workbook, report.MonthlyIncomeVsExpenses);
                 AddTransactionsSheet(workbook, report.Transactions);
 
-
-
                 //SAVE the workbook to a stream and return the byte array, a standard format for returning files in controllers
                 using var stream = new MemoryStream();
                 workbook.SaveAs(stream);
@@ -41,12 +40,9 @@ namespace ExpenseVista.API.Services.Exports
             }
             finally
             {
-                // Always restore culture
                 CultureInfo.CurrentCulture = originalCulture;
                 CultureInfo.CurrentUICulture = originalUICulture;
             }
-
-
         }
         //HELPER METHODS
         private static IXLCell WriteKeyValue(IXLWorksheet ws, ref int row, string label, object value, bool isCurrency = false, bool isPercentage = false)
