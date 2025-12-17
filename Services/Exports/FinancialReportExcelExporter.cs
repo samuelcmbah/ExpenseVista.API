@@ -8,7 +8,7 @@ namespace ExpenseVista.API.Services.Exports
     public class FinancialReportExcelExporter : IFinancialReportExporter
     {
 
-        private const string NairaFormat = "\"₦\"#,##0.00";
+        private const string NairaFormat = "₦ #,##0.00";
         private const double CurrencyColumnWidth = 18;
         private static readonly XLColor AccentColor = XLColor.SeaGreen;
 
@@ -25,6 +25,7 @@ namespace ExpenseVista.API.Services.Exports
 
                 //create a workbook and add all the sheets using separate private methods
                 using var workbook = new XLWorkbook();
+
                 workbook.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                 AddOverviewSheet(workbook, report);
@@ -33,8 +34,6 @@ namespace ExpenseVista.API.Services.Exports
                 AddIncomeVsExpensesSheet(workbook, report.MonthlyIncomeVsExpenses);
                 AddTransactionsSheet(workbook, report.Transactions);
 
-
-
                 //SAVE the workbook to a stream and return the byte array, a standard format for returning files in controllers
                 using var stream = new MemoryStream();
                 workbook.SaveAs(stream);
@@ -42,11 +41,9 @@ namespace ExpenseVista.API.Services.Exports
             }
             finally
             {
-                //restore original culture
                 CultureInfo.CurrentCulture = originalCulture;
                 CultureInfo.CurrentUICulture = originalUICulture;
             }
-
         }
         //HELPER METHODS
         private static IXLCell WriteKeyValue(IXLWorksheet ws, ref int row, string label, object value, bool isCurrency = false, bool isPercentage = false)
@@ -241,27 +238,9 @@ namespace ExpenseVista.API.Services.Exports
                 return;
             }
 
-            // 1. Manually write the headers.
-            ws.Cell("A1").Value = "Month";
-            ws.Cell("B1").Value = "Income";
-            ws.Cell("C1").Value = "Expenses";
-
-            // 2. Loop through the data and set values explicitly.
-            //    SetValue() is a lower-level API that correctly handles numeric types.
-            var row = 2;
-            foreach (var item in data)
-            {
-                ws.Cell(row, 1).SetValue(item.Month);
-                ws.Cell(row, 2).SetValue(item.Income); // Explicitly sets the number
-                ws.Cell(row, 3).SetValue(item.Expenses); // Explicitly sets the number
-                row++;
-            }
-
-            // 3. create the table from the range just populated.
-            var range = ws.Range(ws.Cell("A1"), ws.Cell(row - 1, 3));
-            var table = range.CreateTable("IncomeVsExpensesTable");
-
-            table.Theme = XLTableTheme.TableStyleLight1;
+            // This creates the table and headers automatically from your DTO properties.
+            var table = ws.Cell(1, 1).InsertTable(data);
+            table.Theme = XLTableTheme.TableStyleLight8;
             ApplyCustomHeaderStyle(table);
 
             table.ShowTotalsRow = true;
