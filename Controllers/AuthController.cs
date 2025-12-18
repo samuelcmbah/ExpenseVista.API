@@ -39,7 +39,7 @@ namespace ExpenseVista.API.Controllers
             this.logger = logger;
         }
 
-        private void SetRefreshTokenCookie(TokenResponseDTO tokenResponse)
+        private void SetRefreshTokenCookie(DateTime expiresAt, string token)
         {
             // CRITICAL: If SameSite is None, Secure MUST be true.
             // Even on localhost, if you are doing Cross-Origin (Port 5000 to 7000), use this.
@@ -48,9 +48,10 @@ namespace ExpenseVista.API.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = tokenResponse.RefreshTokenExpiresAt,
+                Expires = expiresAt,
+                Domain = ".samuelcmbah.com.ng"
             };
-            Response.Cookies.Append("refreshToken", tokenResponse.RefreshToken, cookieOptions);
+            Response.Cookies.Append("refreshToken", token, cookieOptions);
         }
 
         [HttpPost("register")]
@@ -79,7 +80,7 @@ namespace ExpenseVista.API.Controllers
             // Success: Return 200 OK with the token and user data
             logger.LogInformation("login succeeded");
 
-            SetRefreshTokenCookie(result.tokenResponse);
+            SetRefreshTokenCookie(result.tokenResponse.RefreshTokenExpiresAt, result.tokenResponse.RefreshToken);
             //return only access token and user info to frontend
             return Ok(new 
             { 
@@ -96,7 +97,7 @@ namespace ExpenseVista.API.Controllers
             var result = await authService.GoogleLoginAsync(request);
 
             // This logic is identical to your email login, we can centralize it
-            SetRefreshTokenCookie(result.tokenResponse);
+            SetRefreshTokenCookie(result.tokenResponse.RefreshTokenExpiresAt, result.tokenResponse.RefreshToken);
 
             return Ok(new
             {
@@ -121,7 +122,7 @@ namespace ExpenseVista.API.Controllers
             var tokenResponse = await authService.RefreshTokenAsync(refreshToken);
 
             // 3. Set the NEW cookie (Rotation)
-            SetRefreshTokenCookie(tokenResponse);
+            SetRefreshTokenCookie(tokenResponse.RefreshTokenExpiresAt, tokenResponse.RefreshToken);
             // 4. Return the new Access Token
             return Ok(new { accessToken = tokenResponse.AccessToken });
         }
@@ -138,14 +139,10 @@ namespace ExpenseVista.API.Controllers
                 await authService.LogoutAsync(userId);
             }
 
+            var cookieExpires = DateTime.UtcNow.AddDays(-1);
+
             // Overwrite the cookie with an expired one
-            Response.Cookies.Append("refreshToken", "", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(-1)
-            });
+            SetRefreshTokenCookie(cookieExpires, string.Empty);
             return Ok(new { message = "Logged out" });
         }
 
