@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseVista.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/report-export")]
     [ApiController]
     public class ReportExportsController : BaseController
     {
