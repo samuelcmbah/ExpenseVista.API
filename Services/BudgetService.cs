@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExpenseVista.API.Data;
 using ExpenseVista.API.DTOs.Budget;
 using ExpenseVista.API.Models;
@@ -88,11 +89,19 @@ namespace ExpenseVista.API.Services
 
         public async Task<BudgetDTO> CreateAsync(BudgetCreateDTO budgetCreateDTO, string userId)
         {
-            // 1. Normalize the incoming date to a consistent, UTC-based start of the month.
-            var budgetMonthUtc = new DateTime(
-                budgetCreateDTO.BudgetMonth.Year,
-                budgetCreateDTO.BudgetMonth.Month,
-                1, 0, 0, 0, DateTimeKind.Utc);
+
+            DateTime budgetMonthUtc;
+            if(budgetCreateDTO.BudgetMonth.HasValue)
+            {
+                var providedDate = budgetCreateDTO.BudgetMonth.Value;
+                budgetMonthUtc = new DateTime(providedDate.Year, providedDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            }
+            else
+            {
+                // No month was provided, so we default to the current month.
+                var now = DateTime.UtcNow;
+                budgetMonthUtc = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            }
 
             // Check if a budget already exists for this month
             var existingBudget = await context.Budgets

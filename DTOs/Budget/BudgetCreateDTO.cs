@@ -10,6 +10,6 @@ namespace ExpenseVista.API.DTOs.Budget
 
         // The client provides the month/year for the budget
         [Required]
-        public DateTime BudgetMonth { get; set; }
+        public DateTime? BudgetMonth { get; set; }
     }
 }
