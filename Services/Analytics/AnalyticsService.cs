@@ -114,21 +114,26 @@ namespace ExpenseVista.API.Services.Analytics
         {
             var summary = await periodicSummaryService.GetPeriodicSummaryAsync(userId, period);
 
+            var monthlyBudgets = await GetMonthlyBudgetDetailsAsync(userId, summary.StartDate, summary.EndDate, summary.Transactions);
+
+
             if (summary.Transactions == null || !summary.Transactions.Any())
             {
                 return new FinancialDataDTO
                 {
                     TimePeriod = period,
+                    StartDate = summary.StartDate,
+                    EndDate = summary.EndDate,
                     Summary = new SummaryDTO(),
                     BudgetProgress = new BudgetProgressDTO(),
                     SpendingByCategory = new List<SpendingCategoryDTO>(),
                     IncomeVsExpenses = new List<IncomeExpenseDataDTO>(),
                     FinancialTrend = new List<IncomeExpenseDataDTO>(),
                     keyInsights = new KeyInsightsDTO(),
-                    Transactions = new List<TransactionDTO>() /// for mapping to exports
+                    Transactions = new List<TransactionDTO>(), /// for mapping to exports
+                    MonthlyBudgets = monthlyBudgets
                 };
             }
-            var monthlyBudgets = await GetMonthlyBudgetDetailsAsync(userId, summary.StartDate, summary.EndDate, summary.Transactions);
 
             decimal totalBudgetForPeriod = monthlyBudgets.Sum(b => b.BudgetAmount ?? 0);
             decimal totalExpensesForPeriod = summary.TotalExpenses;

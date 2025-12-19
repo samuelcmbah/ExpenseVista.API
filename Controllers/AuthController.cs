@@ -46,7 +46,8 @@ namespace ExpenseVista.API.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None,
+                SameSite = SameSiteMode.Lax,
+                Domain = ".samuelcmbah.com.ng",
                 Expires = expires ?? DateTime.UtcNow.AddDays(-1), // Expire in the past if no date provided
             };
 
