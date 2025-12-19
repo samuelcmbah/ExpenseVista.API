@@ -65,6 +65,33 @@ The API provides a comprehensive and secure RESTful interface for all applicatio
 | | `/api/currency/rate` | `GET` | Get the exchange rate between two currencies. |
 
 ---
+### ✨ Feature Spotlight: Production-Grade Excel Export
+
+To provide users with a professional offline reporting tool, the API includes a robust, multi-sheet Excel export feature, engineered for scalability and data integrity.
+
+#### Architectural Approach
+
+The export pipeline was designed using **Clean Architecture principles** to ensure long-term maintainability:
+
+1.  **Decoupled DTOs:** A dedicated set of immutable `ExportDTOs` was created to define a stable, versioned "export contract." This completely decouples the report's structure from the internal API models, preventing accidental breaking changes when the main `AnalyticsDTO` evolves.
+2.  **Service-Oriented Design:** The entire process is orchestrated by dedicated services:
+    *   `IAnalyticsService`: Gathers the raw financial data.
+    *   `FinancialReportExportMapper`: Transforms the analytics data into the stable export DTO format.
+    *   `IFinancialReportExporter`: Consumes the export DTO and uses **ClosedXML** to build the `.xlsx` file in memory.
+3.  **Cross-Platform Compatibility:** The system was engineered to handle complex, real-world deployment challenges, including:
+    *   **Culture Invariance:** Explicitly setting `CultureInfo.InvariantCulture` during the file generation process to ensure number formats (`.` vs `,`) are consistent, solving critical bugs between local (Windows) and production (Linux) environments.
+    *   **Maximum Compatibility Formulas:** Using simple `SUM()` formulas instead of modern `SUBTOTAL()` functions to guarantee that the "Totals" rows render correctly even on older versions of Excel and third-party spreadsheet applications (like Google Sheets or WPS Office).
+
+#### Generated Report Structure
+
+The generated `.xlsx` workbook contains multiple, pre-formatted sheets for easy analysis:
+*   **Overview:** A summary dashboard with key metrics and user details.
+*   **Budget Breakdown:** A detailed, month-by-month view of budget vs. actual spending.
+*   **Spending by Category:** A tabular breakdown of expenses by category with totals.
+*   **Income vs Expenses:** A monthly summary of cash flow.
+*   **All Transactions:** A complete, sortable log of every transaction within the selected period.
+---
+
 
 ### 📦 Core Data Models (DTOs)
 
@@ -74,7 +101,7 @@ To ensure a secure and clean API contract, the system uses Data Transfer Objects
 *   **Transactions:** `TransactionCreateDTO`, `TransactionUpdateDTO`, `TransactionDTO`, `TransactionDTOPagedResponse`
 *   **Budgets:** `BudgetCreateDTO`, `BudgetUpdateDTO`, `BudgetDTO`, `BudgetStatusDTO`, `BudgetProgressDTO`
 *   **Categories:** `CreateCategoryDTO`, `UpdateCategoryDTO`, `CategoryDTO`
-*   **Analytics & Dashboard:** `SummaryDTO`, `KeyInsightsDTO`, `SpendingCategoryDTO`, `IncomeExpenseDataDTO`
+*   **Analytics & Export:** `FinancialDataDTO`, `MonthlyBudgetDetailDTO`, `SummaryDTO`, `KeyInsightsDTO`, `SpendingCategoryDTO`, `IncomeExpenseDataDTO`, `FinancialReportExport`
 
 ---
 
