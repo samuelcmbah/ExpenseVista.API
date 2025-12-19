@@ -63,6 +63,7 @@ The API provides a comprehensive and secure RESTful interface for all applicatio
 | **Analytics** | `/api/analytics` | `GET` | Retrieve detailed financial data for charts and analysis. |
 | **Currency** | `/api/currency/supported` | `GET` | Get a list of supported currencies. |
 | | `/api/currency/rate` | `GET` | Get the exchange rate between two currencies. |
+| **Report Export** | `/api/report-export/export` | `POST` | Generates and downloads a multi-sheet Excel report of financial analytics. |
 
 ---
 ### ✨ Feature Spotlight: Production-Grade Excel Export
