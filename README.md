@@ -3,7 +3,7 @@
 
 The robust backend API for **ExpenseVista**, a modern Personal Finance tracking platform. Built with **.NET 8**, **PostgreSQL**, and **Entity Framework Core**, designed using Clean Architecture principles.
 
-[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-api.onrender.com/swagger/index.html)
+[![Status](https://img.shields.io/badge/status-active-success)](https://expensevista-api.samuelcmbah.com.ng/swagger/index.html)
 [![Frontend Repo](https://img.shields.io/badge/frontend-React-blue)](https://github.com/samuelcmbah/expensevista)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -13,7 +13,7 @@ The robust backend API for **ExpenseVista**, a modern Personal Finance tracking 
 
 This API serves as the core engine for ExpenseVista, handling data persistence, business logic, authentication, and secure communication with the client. It demonstrates professional backend engineering practices including DTO mapping, structured logging, and JWT security.
 
-**Live API/Swagger:** [https://expensevista-api.onrender.com/swagger](https://expensevista-api.onrender.com/swagger)
+**Live API/Swagger:** [https://expensevista-api.onrender.com/swagger](https://expensevista-api.samuelcmbah.com.ng/swagger)
 
 ---
 
@@ -222,7 +222,6 @@ The API is continuously deployed to **Render** from the `main` branch.
   ## 🗺️ Roadmap
 
 This project is actively maintained. Future enhancements include:
-*   [ ] Implementing export of financial data (Excel/PDF).
 *   [ ] Adding third-party payment integration 
 *   [ ] Introducing unit and integration tests to improve code coverage.
 
