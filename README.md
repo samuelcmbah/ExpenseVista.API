@@ -13,7 +13,7 @@ The robust backend API for **ExpenseVista**, a modern Personal Finance tracking 
 
 This API serves as the core engine for ExpenseVista, handling data persistence, business logic, authentication, and secure communication with the client. It demonstrates professional backend engineering practices including DTO mapping, structured logging, and JWT security.
 
-**Live API/Swagger:** [https://expensevista-api.onrender.com/swagger](https://expensevista-api.samuelcmbah.com.ng/swagger)
+[**Live API/Swagger **](https://expensevista-api.samuelcmbah.com.ng/swagger)
 
 ---
 
