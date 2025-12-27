@@ -1,4 +1,3 @@
-
 # 🚀 ExpenseVista API
 
 The robust backend API for **ExpenseVista**, a modern Personal Finance tracking platform. Built with **.NET 8**, **PostgreSQL**, and **Entity Framework Core**, designed using Clean Architecture principles.
@@ -9,6 +8,38 @@ The robust backend API for **ExpenseVista**, a modern Personal Finance tracking 
 
 ---
 
+<!-- Table of Contents -->
+## 🔎 Table of Contents
+
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [API Features & Endpoints](#api-features--endpoints)
+  - [Authentication](#authentication)
+  - [Dashboard](#dashboard)
+  - [Transactions](#transactions)
+  - [Budgets](#budgets)
+  - [Categories](#categories)
+  - [Analytics](#analytics)
+  - [Currency](#currency)
+  - [Report Export](#report-export)
+- [Feature Spotlight: Production-Grade Excel Export](#feature-spotlight-production-grade-excel-export)
+- [Core Data Models (DTOs)](#core-data-models-dtos)
+- [Architecture & Design](#architecture--design)
+  - [Core Architectural Layers](#core-architectural-layers)
+  - [Key Design Patterns & Principles](#key-design-patterns--principles)
+- [Security & Authentication](#security--authentication)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation & Setup](#installation--setup)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+- [Contributions](#contributions)
+- [Author](#author)
+
+---
+
+<a name="overview"></a>
 ## 📘 Overview
 
 This API serves as the core engine for ExpenseVista, handling data persistence, business logic, authentication, and secure communication with the client. It demonstrates professional backend engineering practices including DTO mapping, structured logging, and JWT security.
@@ -17,6 +48,7 @@ This API serves as the core engine for ExpenseVista, handling data persistence, 
 
 ---
 
+<a name="tech-stack"></a>
 ## 🛠️ Tech Stack
 
 * **Framework:** [.NET 8 Web API](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
@@ -29,6 +61,8 @@ This API serves as the core engine for ExpenseVista, handling data persistence, 
 * **Documentation:** [Swashbuckle/Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
 
 ---
+
+<a name="api-features--endpoints"></a>
 ## ✨ API Features & Endpoints
 
 The API provides a comprehensive and secure RESTful interface for all application functionalities. Below is a detailed breakdown of the available endpoints.
@@ -66,6 +100,8 @@ The API provides a comprehensive and secure RESTful interface for all applicatio
 | **Report Export** | `/api/report-export/export` | `POST` | Generates and downloads a multi-sheet Excel report of financial analytics. |
 
 ---
+
+<a name="feature-spotlight-production-grade-excel-export"></a>
 ### ✨ Feature Spotlight: Production-Grade Excel Export
 
 To provide users with a professional offline reporting tool, the API includes a robust, multi-sheet Excel export feature, engineered for scalability and data integrity.
@@ -93,7 +129,7 @@ The generated `.xlsx` workbook contains multiple, pre-formatted sheets for easy 
 *   **All Transactions:** A complete, sortable log of every transaction within the selected period.
 ---
 
-
+<a name="core-data-models-dtos"></a>
 ### 📦 Core Data Models (DTOs)
 
 To ensure a secure and clean API contract, the system uses Data Transfer Objects (DTOs) for all client communication. This decouples the API's public shape from the internal database models. Key DTOs include:
@@ -106,6 +142,7 @@ To ensure a secure and clean API contract, the system uses Data Transfer Objects
 
 ---
 
+<a name="architecture--design"></a>
 ## 🏗️ Architecture & Design
 
 The **ExpenseVista** backend is engineered as a **Layered Monolith** using **ASP.NET 8+**. This architectural choice prioritizes maintainability, strict separation of concerns, and robust testability by adhering to modern C# design principles.
@@ -136,7 +173,11 @@ To protect the internal database structure and prevent over-posting attacks, **D
 #### 4. Global Error Handling
 A custom **Exception Handling Middleware** acts as a centralized safety net. Business logic exceptions (e.g., a custom `BadRequestException`) are caught globally and standardized into consistent HTTP error responses before reaching the client, ensuring a uniform API experience.
 
+---
+
+<a name="security--authentication"></a>
 ### 🔐 Security & Authentication
+
 The API implements a secure, stateful **JWT (JSON Web Token)** implementation with **Refresh Token Rotation**:
 
 *   **Access Tokens:** Short-lived tokens used for Authorization headers.
@@ -160,6 +201,7 @@ To provide a modern and seamless user experience, the API supports external auth
 
 ---
 
+<a name="project-structure"></a>
 ## 📁 Project Structure
 
 ```text
@@ -173,15 +215,17 @@ ExpenseVista.API/
  ├── Migrations/       # EF Core Migrations
  ├── Services/         # Business Logic
  └── Utilities/        # Helper functions
-
 ```
+<a name="getting-started"></a>
 ## ⚙️ Getting Started
 
+<a name="prerequisites"></a>
 ### Prerequisites
 *   [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 *   [PostgreSQL](https://www.postgresql.org/download/) Server
 *   A code editor like [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/).
 
+<a name="installation--setup"></a>
 ### Installation & Setup
 
 1.  **Clone the repository:**
@@ -238,7 +282,7 @@ ExpenseVista.API/
 
 ---
 
-
+<a name="deployment"></a>
 ## 🚀 Deployment
 
 The API is continuously deployed to **Render** from the `main` branch. 
@@ -247,15 +291,18 @@ The API is continuously deployed to **Render** from the `main` branch.
 *   **Database:** A managed PostgreSQL instance on Render.
 *   **Base URL:** `https://expensevista-api.onrender.com`
 
-  ## 🗺️ Roadmap
+<a name="roadmap"></a>
+## 🗺️ Roadmap
 
 This project is actively maintained. Future enhancements include:
 *   [ ] Adding third-party payment integration 
 *   [ ] Introducing unit and integration tests to improve code coverage.
 
+<a name="contributions"></a>
 ## 🤝 Contributions
 Contributions are welcome! Please fork the repository and submit a pull request.
 
+<a name="author"></a>
 ## 🧑‍💻 Author
 * Samuel Mbah
 * GitHub: [samuelcmbah](https://github.com/samuelcmbah)
